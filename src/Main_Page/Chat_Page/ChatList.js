@@ -24,3 +24,4 @@ function ChatList({ chats, selectedChat, onSelectChat }) {
 }
 
 export default ChatList;
+
