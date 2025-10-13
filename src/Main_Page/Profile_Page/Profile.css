@@ -1,0 +1,45 @@
+.upperCtn {
+    padding: 25px;
+}
+
+.pfp {
+    width: 250px;
+}
+
+.userInfoCtn {
+    padding-top: 60px;
+}
+.username {
+    font-size: 30px;
+}
+
+.editBtnCtn{
+    padding-top: 60px;
+}
+.editBtn {
+    display: inline-block;
+
+    border-style: solid;
+    border-color: lightgrey;
+    padding: 5px 40px;
+
+    background-color: lightgray;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+
+.optionList {
+    border-top-style: solid;
+    border-color: black;
+}
+.optionItem {
+    padding: 10px;
+
+    border-bottom-style: solid;
+    border-width: 2px;
+    border-color: gray;
+}
+.option {
+    font-size: 18px;
+}

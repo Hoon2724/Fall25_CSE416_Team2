@@ -2,16 +2,15 @@ import { Link } from 'react-router-dom';
 
 import './Navbar.css';
 import logo from '../Welcome_Page/logo.png';
-import search from './search.png';
-import notif from './notif.png';
-import profile from './profile.png';
 
 function Navbar() {
     return (
         <nav className="navbar navbar-expand-md">
             <div className="container-fluid">
                 <div className="navbar-header logoCtn">
-                    <img src={logo} className="navbar-brand logo"></img>
+                    <Link className='nav-link' to='/home'>
+                        <img src={logo} className="navbar-brand logo"></img>
+                    </Link>
                 </div>
                 <ul className="navbar-nav navCtn">
                     <li className="nav-item navCommunity">
@@ -21,7 +20,7 @@ function Navbar() {
                         <Link className='nav-link' to='/chat'>Chat</Link>
                     </li>
                 </ul>
-                <ul className="navbar-nav ms-auto iconCtn">
+                <ul className="navbar-nav ms-auto align-items-center iconCtn">
                     <li className="nav-item searchIcon">
                         <Link className='nav-link' to='/search'><span className="bi bi-search"></span></Link>
                     </li>
