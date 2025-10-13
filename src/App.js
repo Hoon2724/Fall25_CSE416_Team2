@@ -54,8 +54,12 @@ function App() {
         <Route path='/item' element={<Item />} />
         <Route path='/item-post' element={<ItemPost />} />
         <Route path='/profile' element={<Profile />} />
+<<<<<<< HEAD
         <Route path='/profileEdit' element={<ProfileEdit />} />
         
+=======
+
+>>>>>>> 222c76b1a362f291b1af4971cbed0779f5be08ef
       </Routes>
     </BrowserRouter>
   );
