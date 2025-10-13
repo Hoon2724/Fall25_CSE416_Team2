@@ -1,15 +1,15 @@
-.logoCtn {
+.signInLogoCtn {
     text-align: center;
     margin: 5px 0px 0px 0px;
 }
-.mainLogo {
+.signInMainLogo {
     width: 300px;
 }
 
-.titleCtn {
+.signInTitleCtn {
     text-align: center;
 }
-.title {
+.signInTitle {
     display: inline-block;
 
     border-style: solid;
@@ -17,7 +17,6 @@
     padding: 5px 50px;
 
     background-color: lightgray;
-    cursor: pointer;
     font-size: 30px;
 }
 

@@ -12,11 +12,11 @@ function SignUp() {
 
     return (
         <div className="signUp">
-            <div className="row logoCtn">
+            <div className="logoCtn">
                 <img src={logo} className="mainLogo"></img>
             </div>
-            <div className="row titleCtn">
-                <div className="title">Sign Up</div>
+            <div className="signUpTitleCtn">
+                <div className="signUpTitle">Sign Up</div>
             </div>
             <div className="cautionCtn">
                 <div className="SUNYLogoCtn">

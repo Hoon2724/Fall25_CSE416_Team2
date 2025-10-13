@@ -1,8 +1,11 @@
-.logoCtn {
+.welcomeSignIn {
     text-align: center;
+}
+
+.welcomeLogoCtn {
     margin: 50px 0px 100px 0px;
 }
-.mainLogo {
+.welcomeMainLogo {
     width: 300px;
 }
 

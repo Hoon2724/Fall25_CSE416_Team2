@@ -11,13 +11,13 @@ function SignIn() {
 
     return (
         <div className="signIn">
-            <div className="row logoCtn">
-                <img src={logo} className="mainLogo"></img>
+            <div className="signInLogoCtn">
+                <img src={logo} className="signInMainLogo"></img>
             </div>
-            <div className="row titleCtn">
-                <div className="title">Sign In</div>
+            <div className="signInTitleCtn">
+                <div className="signInTitle">Sign In</div>
             </div>
-            <div onClick={ openGooglePage } className="row googleBtnCtn">
+            <div onClick={ openGooglePage } className="googleBtnCtn">
                 <div className="googleLogoCtn">
                     <img src={googleLogo} className="googleLogo"></img>
                 </div>

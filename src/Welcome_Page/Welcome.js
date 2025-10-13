@@ -14,15 +14,15 @@ function Welcome() {
     }
 
     return (
-        <div className="signIn">
-            <div className="row logoCtn">
-                <img src={logo} className="mainLogo"></img>
+        <div className="welcomeSignIn">
+            <div className="welcomeLogoCtn">
+                <img src={logo} className="welcomeMainLogo"></img>
             </div>
-            <div className="row signInBtnCtn">
-                <btn onClick={ openSignInPage } className="signInBtn">Sign In</btn>
+            <div className="signInBtnCtn">
+                <div onClick={ openSignInPage } className="signInBtn">Sign In</div>
             </div>
-            <div className="row signUpBtnCtn">
-                <btn onClick={ openSignUpPage } className="signUpBtn">Sign Up</btn>
+            <div className="signUpBtnCtn">
+                <div onClick={ openSignUpPage } className="signUpBtn">Sign Up</div>
             </div>
         </div>
     )
