@@ -24,6 +24,7 @@ import SearchResult from './Main_Page/Market_Page/SearchResult.js';
 import Item from './Main_Page/Market_Page/Item.js';
 import ItemPost from './Main_Page/Market_Page/ItemPost.js';
 import Profile from './Main_Page/Profile_Page/Profile.js';
+import ProfileEdit from './Main_Page/Profile_Page/ProfileEdit.js';
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
@@ -54,12 +55,8 @@ function App() {
         <Route path='/item' element={<Item />} />
         <Route path='/item-post' element={<ItemPost />} />
         <Route path='/profile' element={<Profile />} />
-<<<<<<< HEAD
         <Route path='/profileEdit' element={<ProfileEdit />} />
-        
-=======
 
->>>>>>> 222c76b1a362f291b1af4971cbed0779f5be08ef
       </Routes>
     </BrowserRouter>
   );
