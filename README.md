@@ -32,3 +32,7 @@ By combining a **student-focused environment** with **AI enhancements**, our pla
 - Kitae Kim  
 - Jaeheon Park  
 - Sanghoon Lee
+
+## Regarding Web View Connection
+- Currently, authentication process is not implemented, thus the login process is incomplete. After clicking "Continue with Google" button, click on "Temporary" to continue with to the main page.
+- The redirection to viewing post on Market page is done via configuring the URL to be `localhost:3000/item`. This will be modified to be done by clicking on the post in the future.
