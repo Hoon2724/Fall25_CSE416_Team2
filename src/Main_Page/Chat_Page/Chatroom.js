@@ -1,4 +1,4 @@
-function Chatroom({ selectedChat, messages }) {
+function Chatroom({ selectedChat, messages, onSendMessage }) {
     return (
         <div className="chatroom-container">
             <div className="chatroom-header">
@@ -20,8 +20,25 @@ function Chatroom({ selectedChat, messages }) {
                     type="text" 
                     className="message-input"
                     placeholder="Insert to send..."
+                    onKeyPress={(e) => {
+                        if (e.key === 'Enter' && e.target.value.trim()) {
+                            onSendMessage && onSendMessage(e.target.value);
+                            e.target.value = '';
+                        }
+                    }}
                 />
-                <button className="send-button">Send</button>
+                <button 
+                    className="send-button"
+                    onClick={(e) => {
+                        const input = e.target.previousElementSibling;
+                        if (input.value.trim()) {
+                            onSendMessage && onSendMessage(input.value);
+                            input.value = '';
+                        }
+                    }}
+                >
+                    Send
+                </button>
             </div>
         </div>
     );
