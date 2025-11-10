@@ -1,4 +1,41 @@
 /* Item Creation Page Styles */
+/* === 추가: 업로드 미리보기/에러 표시 === */
+.preview-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: center; /* 업로드 영역 아래 가운데 정렬 */
+}
+
+.preview-thumb {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+/* 업로드 영역을 클릭 가능한 라벨로 쓸 때 보조 스타일 */
+.image-upload-area {
+  display: block;            /* 라벨 클릭 범위 넓게 */
+  position: relative;
+}
+
+/* 에러/상태 메시지 */
+.error-text {
+  margin-top: 8px;
+  color: #e11d48;
+  font-size: 0.95rem;
+}
+
+/* 버튼 비활성화 상태(로딩 등) */
+.post-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .item-creation-wrapper {
     min-height: 100vh;
     background-color: white;
