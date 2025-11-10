@@ -23,6 +23,7 @@ import Search from './Main_Page/Market_Page/Search.js';
 import SearchResult from './Main_Page/Market_Page/SearchResult.js';
 import Item from './Main_Page/Market_Page/Item.js';
 import ItemPost from './Main_Page/Market_Page/ItemPost.js';
+import ItemDetail from './Main_Page/Market_Page/ItemDetail.js'; // ✅ 새로 추가
 import Profile from './Main_Page/Profile_Page/Profile.js';
 import ProfileEdit from './Main_Page/Profile_Page/ProfileEdit.js';
 import Option from './Main_Page/Profile_Page/Option.js';
@@ -49,12 +50,17 @@ function App() {
         <Route path='/community/post/:id' element={<Post />} />
         <Route path='/community/post/create' element={<PostCreate />} />
 
+        {/* -------- Market / Item Pages -------- */}
+        <Route path='/item' element={<Item />} />                  {/* 상품 목록 */}
+        <Route path='/item-post' element={<ItemPost />} />         {/* 상품 등록 */}
+        <Route path='/item/:id' element={<ItemDetail />} />        {/* 상품 상세 + 추천 */}
+
         {/* -------- Other Features -------- */}
         <Route path='/chat' element={<Chat />} />
         <Route path='/search' element={<Search />} />
         <Route path='/search-result' element={<SearchResult />} />
-        <Route path='/item' element={<Item />} />
-        <Route path='/item-post' element={<ItemPost />} />
+
+        {/* -------- Profile -------- */}
         <Route path='/profile' element={<Profile />} />
         <Route path='/profileEdit' element={<ProfileEdit />} />
         <Route path='/option' element={<Option />} />
