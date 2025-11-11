@@ -1,0 +1,264 @@
+/* Item Creation Page Styles */
+/* === 추가: 업로드 미리보기/에러 표시 === */
+.preview-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: center; /* 업로드 영역 아래 가운데 정렬 */
+}
+
+.preview-thumb {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+/* 업로드 영역을 클릭 가능한 라벨로 쓸 때 보조 스타일 */
+.image-upload-area {
+  display: block;            /* 라벨 클릭 범위 넓게 */
+  position: relative;
+}
+
+/* 에러/상태 메시지 */
+.error-text {
+  margin-top: 8px;
+  color: #e11d48;
+  font-size: 0.95rem;
+}
+
+/* 버튼 비활성화 상태(로딩 등) */
+.post-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.item-creation-wrapper {
+    min-height: 100vh;
+    background-color: white;
+}
+
+.item-creation-container {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+}
+
+.item-creation-content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* Image Upload Section */
+.image-upload-section {
+    text-align: center;
+}
+
+.image-upload-area {
+    background-color: #f5f5f5;
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    padding: 60px 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 0 auto;
+    max-width: 400px;
+}
+
+.image-upload-area:hover {
+    background-color: #e8e8e8;
+    border-color: #999;
+}
+
+.upload-icon {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #999;
+    margin-bottom: 15px;
+}
+
+.upload-text {
+    font-size: 1.1rem;
+    color: gray;
+    margin: 0;
+}
+
+/* Form Section */
+.form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: black;
+    margin: 0;
+}
+
+.form-input, .form-textarea {
+    padding: 15px;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: white;
+    color: black;
+    font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.form-input::placeholder, .form-textarea::placeholder {
+    color: #999;
+}
+
+.form-input:focus, .form-textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Post Section */
+.post-section {
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 0;
+}
+
+.post-button {
+    position: static !important;
+    bottom: auto !important;
+    right: auto !important;
+    left: auto !important;
+    transform: none !important;
+    z-index: auto !important;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    min-width: 200px;
+}
+
+.post-button:hover {
+    background-color: #5a6268;
+}
+
+/* Mobile View */
+@media (max-width: 768px) {
+    .item-creation-container {
+        padding: 15px;
+        padding-bottom: 30px;
+    }
+    
+    .item-creation-content {
+        gap: 25px;
+    }
+    
+    .image-upload-area {
+        padding: 40px 15px;
+        max-width: 100%;
+    }
+    
+    .upload-icon {
+        font-size: 2.5rem;
+        margin-bottom: 12px;
+    }
+    
+    .upload-text {
+        font-size: 1rem;
+    }
+    
+    .form-section {
+        gap: 20px;
+    }
+    
+    .form-label {
+        font-size: 1rem;
+    }
+    
+    .form-input, .form-textarea {
+        padding: 12px;
+        font-size: 0.95rem;
+    }
+    
+    .form-textarea {
+        min-height: 80px;
+    }
+    
+    .post-button {
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        min-width: 150px;
+    }
+}
+
+/* Desktop View */
+@media (min-width: 769px) {
+    .item-creation-container {
+        padding: 40px 20px;
+        padding-bottom: 60px;
+    }
+    
+    .item-creation-content {
+        gap: 40px;
+    }
+    
+    .image-upload-area {
+        padding: 80px 40px;
+        max-width: 500px;
+    }
+    
+    .upload-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+    }
+    
+    .upload-text {
+        font-size: 1.2rem;
+    }
+    
+    .form-section {
+        gap: 30px;
+    }
+    
+    .form-label {
+        font-size: 1.2rem;
+    }
+    
+    .form-input, .form-textarea {
+        padding: 18px;
+        font-size: 1.1rem;
+    }
+    
+    .form-textarea {
+        min-height: 120px;
+    }
+    
+    .post-button {
+        padding: 18px 50px;
+        font-size: 1.3rem;
+        min-width: 250px;
+    }
+}

@@ -1,0 +1,176 @@
+/* Item Description Page Styles */
+.item-page-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.item-description-container {
+    flex: 1;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* Image Section */
+.item-image-section {
+    text-align: center;
+}
+
+.item-main-image {
+    width: 100%;
+    max-width: 400px;
+    height: 300px;
+    object-fit: cover;
+    border-style: solid;
+    border-color: gray;
+    border-radius: 10px;
+    background-color: lightgray;
+}
+
+/* Main Content Grid */
+.item-content-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* Left Side: Title, Description, Condition */
+.item-details-section {
+    text-align: left;
+}
+
+.item-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: black;
+    margin: 0 0 20px 0;
+}
+
+.item-description,
+.item-condition {
+    font-size: 1.1rem;
+    color: black;
+    margin: 0 0 15px 0;
+    line-height: 1.6;
+}
+
+/* Right Side: Price/Seller Info + Buttons */
+.item-right-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.item-price-seller-box {
+    text-align: left;
+}
+
+.item-price {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: black;
+    margin: 0 0 10px 0;
+}
+
+.item-seller {
+    font-size: 1.1rem;
+    color: black;
+    margin: 0 0 5px 0;
+}
+
+.item-reputation {
+    font-size: 0.9rem;
+    color: gray;
+    margin: 0;
+}
+
+/* Action Buttons */
+.item-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.favorite-btn,
+.chat-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: transparent;
+    color: black;
+    border: none;
+    padding: 15px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+}
+
+.favorite-icon,
+.chat-icon {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.favorite-text,
+.chat-text {
+    font-size: 0.9rem;
+}
+
+/* Desktop View */
+@media (min-width: 768px) {
+    .item-description-container {
+        padding: 40px 20px;
+    }
+
+    .item-content-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 40px;
+        align-items: start;
+    }
+
+    .item-details-section {
+        text-align: left;
+    }
+
+    .item-title {
+        font-size: 2.2rem;
+    }
+
+    .item-description,
+    .item-condition {
+        font-size: 1.2rem;
+    }
+
+    .item-right-section {
+        gap: 30px;
+    }
+
+    .item-actions {
+        flex-direction: row;
+        gap: 15px;
+    }
+
+    .favorite-btn,
+    .chat-btn {
+        flex: 1;
+        flex-direction: column;
+        padding: 12px;
+    }
+
+    .favorite-icon,
+    .chat-icon {
+        font-size: 1.3rem;
+        margin-bottom: 6px;
+    }
+
+    .favorite-text,
+    .chat-text {
+        font-size: 0.8rem;
+    }
+}

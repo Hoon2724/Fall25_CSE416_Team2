@@ -1,0 +1,21 @@
+.profileEditCtn{
+    padding: 10px;
+}
+
+.profileTitleCtn{
+    text-align: center;
+}
+.profileTitle {
+    font-size: 35px;
+}
+
+.pfpEdit {
+    margin: 20px;
+}
+
+.nameEdit{
+    margin: 20px;
+}
+#newUsername {
+    background-color: lightgray;
+}

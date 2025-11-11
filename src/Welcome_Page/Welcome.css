@@ -1,0 +1,40 @@
+.welcomeSignIn {
+    text-align: center;
+}
+
+.welcomeLogoCtn {
+    margin: 50px 0px 100px 0px;
+}
+.welcomeMainLogo {
+    width: 300px;
+}
+
+.signInBtnCtn {
+    text-align: center;
+    margin: 50px;
+}
+.signInBtn {
+    border-style: solid;
+    border-radius: 30px;
+    border-color: lightgrey;
+    padding: 5px 50px;
+
+    background-color: lightgray;
+    cursor: pointer;
+    font-size: 30px;
+}
+
+.signUpBtnCtn {
+    text-align: center;
+    margin: 50px;
+}
+.signUpBtn {
+    border-style: solid;
+    border-radius: 30px;
+    border-color: lightgrey;
+    padding: 5px 50px;
+
+    background-color: lightgray;
+    cursor: pointer;
+    font-size: 30px;
+}

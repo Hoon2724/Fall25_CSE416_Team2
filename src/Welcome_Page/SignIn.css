@@ -1,0 +1,45 @@
+.signInLogoCtn {
+    text-align: center;
+    margin: 5px 0px 0px 0px;
+}
+.signInMainLogo {
+    width: 300px;
+}
+
+.signInTitleCtn {
+    text-align: center;
+}
+.signInTitle {
+    display: inline-block;
+
+    border-style: solid;
+    border-color: lightgrey;
+    padding: 5px 50px;
+
+    background-color: lightgray;
+    font-size: 30px;
+}
+
+.googleBtnCtn {
+    text-align: center;
+    margin: 50px;
+
+    border-style: solid;
+    border-radius: 30px;
+    border-color: lightgrey;
+    background-color: lightgray;
+
+    cursor: pointer;
+}
+.googleLogoCtn {
+    display: inline-block;
+    margin-top: 10px;
+}
+.googleLogo {
+    width: 40px;
+}
+.googleBtn {
+    display: inline-block;
+    font-size: 30px;
+    margin: 0px 10px 10px 10px;
+}

@@ -1,0 +1,124 @@
+/* Community.css */
+.community-container {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  height: 100vh;
+  background: #efefef;
+  margin-top: 56px; /* pushes page below the fixed navbar */
+}
+
+
+.community-topbar {
+  grid-column: 1 / span 2;
+  display: flex;
+  align-items: center;
+  background: #d6d6d6;
+  padding: 0 16px;
+  border-bottom: 1px solid #aaa;
+  gap: 16px;
+}
+
+.community-logo {
+  height: 32px;
+  cursor: pointer;
+}
+
+.community-tab {
+  padding: 8px 18px;
+  border-radius: 20px;
+  background: #ccc;
+  font-weight: bold;
+}
+.community-tab.active {
+  background: #999;
+}
+
+.community-icons {
+  margin-left: auto;
+  display: flex;
+  gap: 15px;
+}
+
+/* Sidebar */
+.community-sidebar {
+  background: #f2f2f2;
+  border-right: 1px solid #ccc;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sidebar-home {
+  background: #ddd;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: bold;
+  text-align: center;
+}
+.sidebar-title {
+  font-weight: bold;
+  margin-top: 10px;
+}
+.sidebar-btn {
+  background: #ddd;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  text-align: left;
+  cursor: pointer;
+  font-weight: bold;
+}
+.sidebar-btn.active {
+  background: #999;
+  color: white;
+}
+.sidebar-create {
+  margin-top: auto;
+  background: #eaeaea;
+  border: 2px solid #333;
+  border-radius: 20px;
+  padding: 8px 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Main content */
+.community-main {
+  background: #efefef;
+  padding: 20px;
+  overflow-y: auto;
+}
+.post-card {
+  background: #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.post-card:hover {
+  background: #d0d0d0;
+}
+.post-title {
+  font-weight: bold;
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+.post-preview {
+  color: #333;
+}
+.post-meta {
+  text-align: right;
+  font-size: 13px;
+  color: #333;
+}
+.post-img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
