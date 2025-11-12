@@ -18,9 +18,11 @@
 }
 .editBtn {
     display: inline-block;
+    margin-right: 5px;
 
     border-style: solid;
     border-color: lightgrey;
+    border-radius: 8px;
     padding: 5px 40px;
 
     background-color: lightgray;
