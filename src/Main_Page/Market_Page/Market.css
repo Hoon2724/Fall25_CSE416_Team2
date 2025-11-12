@@ -128,16 +128,16 @@
         border-radius: 20px;
     }
     
-    .item-image {
+    .market-image{
         flex-shrink: 0;
         margin-right: 20px;
+        width: 200px;
+        height: 200px;
     }
     
-    .item-image img {
-        width: 100px;
-        height: 100px;
+    .market-image img {
         border-radius: 8px;
-        object-fit: cover;
+        object-fit: fill;
     }
     
     .item-info {
