@@ -6,6 +6,8 @@ import './Profile.css'
 import profile from './profile.png';
 import Navbar from '../Navbar.js';
 import { getCurrentUser, signOut } from '../../lib/api';
+import Item from './../Market_Page/Item';
+import Option from './Option.js';
 
 function Profile() {
     const navigate = useNavigate();
@@ -109,9 +111,8 @@ function Profile() {
             </div>
             <ul className="nav flex-column optionList">
                 <li className="nav-item optionItem">
-                    <Link to='../option'>
-                        <div className="option postHistory">Post History</div>
-                    </Link>
+                    <div className="option">My Item</div>
+                    <Option mode="myItem" />
                 </li>
                 <li className="nav-item optionItem">
                     <Link to='../option'>

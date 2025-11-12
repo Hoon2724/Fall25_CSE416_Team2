@@ -1,7 +1,54 @@
-.optionTitleCtn {
-    text-align: center;
-    margin-top: 10px;
+.opItems {
+    margin-top: 5px;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
-.optionTitle {
-    font-size: 35px;
+
+.opItem {
+    display: flex;
+    padding: 20px;
+    background-color: lightgray;
+    border-radius: 20px;
+    margin-right: 10px;
+    flex: 0 0 auto;
+}
+
+.opImage{
+    flex-shrink: 0;
+    margin-right: 10px;
+    width: 100px;
+    height: 100px;
+}
+
+.opImage img {
+    border-radius: 8px;
+    object-fit: fill;
+}
+
+.opInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-left: 10px;
+}
+
+.opName {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0 0 10px 0;
+    color: black;
+}
+
+.opPrice {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: black;
+    margin: 0 0 8px 0;
+}
+
+.opSeller {
+    font-size: 1rem;
+    color: gray;
+    margin: 0;
 }

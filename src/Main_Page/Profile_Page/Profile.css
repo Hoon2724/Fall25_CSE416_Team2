@@ -44,6 +44,7 @@
 .optionList {
     border-top-style: solid;
     border-color: black;
+    overflow: clip;
 }
 .optionItem {
     padding: 10px;
@@ -54,4 +55,5 @@
 }
 .option {
     font-size: 18px;
+    font-weight: bold;
 }
