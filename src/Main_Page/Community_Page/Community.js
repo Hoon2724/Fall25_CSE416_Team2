@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../Navbar.js'; // Use your existing Navbar component
 import './Community.css';
 import { getCommunities, getCommunityPosts } from '../../lib/api';
 
 function Community() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedCommunityId, setSelectedCommunityId] = useState('all');
   const [communities, setCommunities] = useState([]);
   const [posts, setPosts] = useState([]);
@@ -54,7 +55,7 @@ function Community() {
     };
 
     loadPosts();
-  }, [selectedCommunityId]);
+  }, [selectedCommunityId, location.key, location.state?.refresh]);
 
   const changeCommunity = (communityId) => {
     setSelectedCommunityId(communityId);

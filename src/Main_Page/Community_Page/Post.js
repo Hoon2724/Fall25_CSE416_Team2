@@ -176,7 +176,7 @@ export default function Post() {
       const res = await deletePost(post.id);
       if (res.res_code === 200) {
         alert('Post deleted.');
-        nav('/community');
+        nav('/community', { replace: true, state: { refresh: Date.now() } });
       } else {
         alert(res.res_msg || 'Failed to delete post');
       }
