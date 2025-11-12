@@ -40,6 +40,12 @@ function SearchResult() {
                 <div className="search-header">
                     <h1 className="search-title">Search Input: {query || 'All'}</h1>
                 </div>
+
+                <div className="itemUploadButton d-flex justify-content-center align-items-center">
+                    <div className="itemUploadBtn d-flex justify-content-center align-items-center" onClick={() => navigate(`/item-post`)}>
+                        <div className="post-text">List your item</div>
+                    </div>
+                </div>
                 
                 <div className="divider-line"></div>
                 
@@ -63,13 +69,6 @@ function SearchResult() {
                             </div>
                         </div>
                     ))}
-                </div>
-                
-                <div className="post-button">
-                    <button className="post-btn">
-                        <span className="post-icon">+</span>
-                        <span className="post-text">Post</span>
-                    </button>
                 </div>
             </div>
         </div>
