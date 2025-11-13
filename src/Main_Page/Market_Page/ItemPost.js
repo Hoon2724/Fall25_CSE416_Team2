@@ -103,11 +103,11 @@ function ItemPost() {
         setTags((res?.hashtags || []).map((h) => h.replace(/^#/, "")));
       } catch (err) {
         console.warn("classify failed", err);
-        setErrorMsg("이미지 분류 실패 (업로드는 성공)");
+        setErrorMsg("image clssify failed (upload is successful");
       }
     } catch (err) {
       console.error(err);
-      setErrorMsg(err.message || "업로드 오류");
+      setErrorMsg(err.message || "upload failed");
     } finally {
       setLoading(false);
       e.target.value = "";
@@ -171,7 +171,7 @@ function ItemPost() {
         },
       });
       
-      alert("게시 완료!");
+      alert("sucessful posting!");
       setTitle("");
       setDesc("");
       setPrice("");
@@ -181,7 +181,7 @@ function ItemPost() {
       navigate(`../home`);
     } catch (err) {
       console.error(err);
-      setErrorMsg(err.message || "게시 중 오류");
+      setErrorMsg(err.message || "error on posting item");
     } finally {
       setLoading(false);
     }
