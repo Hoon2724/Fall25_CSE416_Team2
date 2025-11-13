@@ -63,7 +63,7 @@ function App() {
         <Route path='/search-result' element={<SearchResult />} />
         <Route path='/profile' element={<Profile />} />
         <Route path='/profileEdit' element={<ProfileEdit />} />
-        <Route path='/option' element={<Option />} />
+        <Route path='/option' element={<OptionPage />} />
 
       </Routes>
     </BrowserRouter>

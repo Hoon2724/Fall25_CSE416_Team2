@@ -115,17 +115,16 @@ function Profile() {
                     <Option mode="myItem" />
                 </li>
                 <li className="nav-item optionItem">
-                    <Link to='../option'>
-                        <div className="option myPosts">My Posts</div>
-                    </Link>
+                    <div className="option myPosts">Previously viewed items</div>
+                    <Option mode="history" />
                 </li>
                 <li className="nav-item optionItem">
-                    <Link to='../option'>
+                    <Link to='../option/favorite'>
                         <div className="option favPosts">My Favorite Posts</div>
                     </Link>
                 </li>
                 <li className="nav-item optionItem">
-                    <Link to='../option'>
+                    <Link to='../option/post'>
                         <div className="option myComments">My Comments</div>
                     </Link>
                 </li>
