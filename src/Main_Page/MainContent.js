@@ -38,7 +38,7 @@ function MainContent() {
   return (
     <div className="mainContentCtn">
       <Navbar />
-      {/* ✅ DB에서 불러온 목록 + 상태를 Market으로 전달 */}
+      {/* DB에서 불러온 목록 + 상태를 Market으로 전달 */}
       <Market items={items} loading={loading} errorMsg={errorMsg} />
     </div>
   );
