@@ -68,6 +68,7 @@
   justify-content:flex-end;
 }
 
+.post-contact-btn,
 .post-edit-btn,
 .post-delete-btn,
 .post-save-btn,
@@ -78,6 +79,16 @@
   background:#f0f0f0;
   font-weight:600;
   cursor:pointer;
+}
+
+.post-contact-btn {
+  border-color:#2563eb;
+  color:#2563eb;
+}
+
+.post-contact-btn:disabled {
+  opacity:0.6;
+  cursor:not-allowed;
 }
 
 .post-delete-btn {

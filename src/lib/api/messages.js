@@ -19,7 +19,7 @@ export const getMessages = async (chatRoomId, filters = {}) => {
 
     const { data: chatRoom, error: chatRoomError } = await supabase
       .from('chat_rooms')
-      .select('buyer_id, seller_id')
+      .select('buyer_id, seller_id, unread_by_buyer, unread_by_seller')
       .eq('id', chatRoomId)
       .single();
 
@@ -102,7 +102,7 @@ export const sendMessage = async (messageData) => {
 
     const { data: chatRoom, error: chatRoomError } = await supabase
       .from('chat_rooms')
-      .select('buyer_id, seller_id')
+      .select('buyer_id, seller_id, unread_by_buyer, unread_by_seller')
       .eq('id', chat_room_id)
       .single();
 
@@ -131,14 +131,20 @@ export const sendMessage = async (messageData) => {
     if (messageError) throw messageError;
 
     const isBuyer = chatRoom.buyer_id === user.id;
-    const updateField = isBuyer ? 'unread_by_seller' : 'unread_by_buyer';
+    const unreadByBuyer = chatRoom.unread_by_buyer ?? 0;
+    const unreadBySeller = chatRoom.unread_by_seller ?? 0;
+
+    const unreadUpdate =
+      isBuyer
+        ? { unread_by_seller: unreadBySeller + 1, unread_by_buyer: unreadByBuyer }
+        : { unread_by_buyer: unreadByBuyer + 1, unread_by_seller: unreadBySeller };
 
     await supabase
       .from('chat_rooms')
       .update({
         last_message: content,
         last_message_at: new Date().toISOString(),
-        [updateField]: supabase.raw(`${updateField} + 1`)
+        ...unreadUpdate
       })
       .eq('id', chat_room_id);
 

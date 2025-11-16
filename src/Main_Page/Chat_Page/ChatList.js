@@ -1,15 +1,24 @@
-function ChatList({ chats, selectedChat, onSelectChat }) {
+function ChatList({ chats, selectedChat, onSelectChat, loading, error }) {
     return (
         <div className="chat-list-container">
             <div className="chat-list-header">
                 <h2 className="chat-list-title">Chatting Room</h2>
             </div>
             <div className="chat-list">
-                {chats.map(chat => (
+                {loading && (
+                    <div className="chat-list-placeholder">Loading chat rooms…</div>
+                )}
+                {!loading && error && (
+                    <div className="chat-list-error">{error}</div>
+                )}
+                {!loading && !error && chats.length === 0 && (
+                    <div className="chat-list-placeholder">No chat rooms yet.</div>
+                )}
+                {!loading && !error && chats.map(chat => (
                     <div 
                         key={chat.id}
-                        className={`chat-item ${selectedChat.id === chat.id ? 'active' : ''}`}
-                        onClick={() => onSelectChat(chat)}
+                        className={`chat-item ${selectedChat && selectedChat.id === chat.id ? 'active' : ''}`}
+                        onClick={() => onSelectChat && onSelectChat(chat)}
                     >
                         <div className="chat-item-info">
                             <div className="chat-item-name">{chat.name}</div>

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Navbar from "./Navbar.js";
 import Market from "./Market_Page/Market.js";
-import { supabase } from "../lib/supabaseClient";
+import { getLatestItems } from "../lib/api";
 
 function MainContent() {
   const [items, setItems] = useState([]);
@@ -10,27 +10,25 @@ function MainContent() {
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    async function fetchItems() {
+    const fetchItems = async () => {
       try {
         setLoading(true);
         setErrorMsg("");
-
-        // 🔹 item_catalog 뷰에서 최신 상품 30개 가져오기
-        const { data, error } = await supabase
-          .from("item_catalog")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(30);
-
-        if (error) throw error;
-        setItems(data || []);
+        const res = await getLatestItems(30);
+        if (res.res_code === 200) {
+          setItems(res.items || []);
+        } else {
+          setItems([]);
+          setErrorMsg(res.res_msg || "Failed to load items");
+        }
       } catch (err) {
         console.error(err);
         setErrorMsg(err.message || "Failed to load items");
+        setItems([]);
       } finally {
         setLoading(false);
       }
-    }
+    };
 
     fetchItems();
   }, []);

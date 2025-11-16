@@ -8,6 +8,8 @@ import { getPostDetails, updatePost, deletePost } from '../../lib/api/posts';
 import { createComment } from '../../lib/api/comments';
 import { getCommunityPosts } from '../../lib/api/communities';
 import { getPostVotes, voteOnPost } from '../../lib/api/votes';
+import { createChatFromPostAuthor } from '../../lib/api/chat';
+import { supabase } from '../../lib/supabaseClient';
 
 export default function Post() {
   const { id } = useParams(); // 실제로는 id로 fetch
@@ -26,6 +28,8 @@ export default function Post() {
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
+  const [contactingAuthor, setContactingAuthor] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   useEffect(() => {
     const loadVotes = async (postId) => {
@@ -78,6 +82,16 @@ export default function Post() {
       loadPost();
     }
   }, [id]);
+
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (!error) {
+        setCurrentUserId(data?.user?.id || null);
+      }
+    };
+    loadCurrentUser();
+  }, []);
 
   const handleVote = async (voteType) => {
     if (!post || voteLoading) return;
@@ -185,6 +199,33 @@ export default function Post() {
     }
   };
 
+  const handleContactAuthor = async () => {
+    if (!post || contactingAuthor) return;
+    setContactingAuthor(true);
+    try {
+      const res = await createChatFromPostAuthor(post.id);
+      console.info('[Post] createChatFromPostAuthor response', res);
+      if (res.res_code === 201 || res.res_code === 409) {
+        const roomId = res.chat_room?.id;
+        if (!roomId) {
+          console.error('[Post] Chat room response missing id', res);
+          alert('Failed to locate chat room after creation.');
+          return;
+        }
+        nav('/chat', { state: { chatRoomId: roomId } });
+      } else if (res.res_code === 401) {
+        alert('Please sign in to contact the author.');
+      } else {
+        alert(res.res_msg || 'Failed to contact author.');
+      }
+    } catch (error) {
+      console.error('[Post] createChatFromPostAuthor error', error);
+      alert(error.message || 'Failed to contact author.');
+    } finally {
+      setContactingAuthor(false);
+    }
+  };
+
   const formattedDate = (value) => {
     try {
       return new Date(value).toLocaleString();
@@ -224,6 +265,15 @@ export default function Post() {
               </div>
               <div className="post-meta-right">
                 <div className="post-header-actions">
+                  {post.author?.id && post.author.id !== currentUserId && (
+                    <button
+                      className="post-contact-btn"
+                      onClick={handleContactAuthor}
+                      disabled={contactingAuthor}
+                    >
+                      {contactingAuthor ? 'Starting chat...' : 'Contact'}
+                    </button>
+                  )}
                   <button className="post-edit-btn" onClick={startEditing}>
                     Edit
                   </button>

@@ -137,10 +137,22 @@ export const getLatestItems = async (limit = 20) => {
       .select(`
         id,
         title,
+        description,
         price,
+        category,
+        category_id,
+        seller_id,
         created_at,
         item_images (
           url
+        ),
+        item_tags (
+          tag
+        ),
+        users!items_seller_id_fkey (
+          id,
+          display_name,
+          trust_score
         )
       `)
       .order('created_at', { ascending: false })
@@ -148,18 +160,37 @@ export const getLatestItems = async (limit = 20) => {
 
     if (itemsError) throw itemsError;
 
-    const transformedItems = items.map(item => ({
-      id: item.id,
-      title: item.title,
-      price: item.price,
-      seller: {
-        display_name: 'Seller' 
-      },
-      images: item.item_images ? item.item_images.map(img => ({
-        url: img.url
-      })) : [],
-      created_at: item.created_at
-    }));
+    const transformedItems = items.map(item => {
+      const images = item.item_images
+        ? item.item_images.map(img => ({
+            url: toPublicImageUrl(img.url)
+          }))
+        : [];
+
+      const displayName = item.users?.display_name || null;
+      const trustScore = item.users?.trust_score ?? null;
+
+      return {
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        price: item.price,
+        category: item.category,
+        category_id: item.category_id,
+        image_url: images.length > 0 ? images[0].url : null,
+        images,
+        tags: item.item_tags ? item.item_tags.map(tag => tag.tag) : [],
+        seller_id: item.seller_id,
+        seller_display_name: displayName,
+        seller_trust_score: trustScore,
+        seller: {
+          id: item.seller_id,
+          display_name: displayName,
+          trust_score: trustScore
+        },
+        created_at: item.created_at
+      };
+    });
 
     return {
       res_code: 200,

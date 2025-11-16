@@ -18,54 +18,81 @@ export const getChatRooms = async () => {
       .select(`
         id,
         item_id,
+        buyer_id,
+        seller_id,
         last_message,
         last_message_at,
         unread_by_buyer,
         unread_by_seller,
-        created_at,
-        items (
-          id,
-          title,
-          price
-        ),
-        users!chat_rooms_buyer_id_fkey (
-          id,
-          display_name
-        ),
-        users!chat_rooms_seller_id_fkey (
-          id,
-          display_name
-        )
+        created_at
       `)
-      .or(`buyer_id.eq.${user.id}, seller_id.eq.${user.id}`)
+      .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
       .order('last_message_at', { ascending: false });
 
     if (chatRoomsError) throw chatRoomsError;
 
+    const buyerIds = chatRooms.map(room => room.buyer_id).filter(Boolean);
+    const sellerIds = chatRooms.map(room => room.seller_id).filter(Boolean);
+    const userIds = Array.from(new Set([...buyerIds, ...sellerIds]));
+
+    let usersMap = new Map();
+    if (userIds.length > 0) {
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('id, display_name, trust_score')
+        .in('id', userIds);
+      if (usersError) throw usersError;
+      usersMap = new Map(usersData.map(userRow => [userRow.id, userRow]));
+    }
+
+    const itemIds = chatRooms
+      .map(room => room.item_id)
+      .filter(idVal => idVal !== null && idVal !== undefined);
+
+    let itemsMap = new Map();
+    if (itemIds.length > 0) {
+      const { data: itemsData, error: itemsError } = await supabase
+        .from('items')
+        .select('id, title, price')
+        .in('id', itemIds);
+      if (itemsError) throw itemsError;
+      itemsMap = new Map(itemsData.map(itemRow => [itemRow.id, itemRow]));
+    }
+
     const transformedChatRooms = chatRooms.map(room => {
-      const isBuyer = room.users_buyer_id_fkey.id === user.id;
-      const otherUser = isBuyer ? room.users_seller_id_fkey : room.users_buyer_id_fkey;
+      const buyerProfile = usersMap.get(room.buyer_id) || null;
+      const sellerProfile = usersMap.get(room.seller_id) || null;
+      const itemProfile = room.item_id ? itemsMap.get(room.item_id) || null : null;
+      const isBuyer = room.buyer_id === user.id;
       const unreadCount = isBuyer ? room.unread_by_buyer : room.unread_by_seller;
 
       return {
         id: room.id,
-        item: room.items ? {
-          id: room.items.id,
-          title: room.items.title,
-          price: room.items.price
-        } : null,
-        buyer: {
-          id: room.users_buyer_id_fkey.id,
-          display_name: room.users_buyer_id_fkey.display_name
-        },
-        seller: {
-          id: room.users_seller_id_fkey.id,
-          display_name: room.users_seller_id_fkey.display_name
-        },
+        item: itemProfile
+          ? {
+              id: itemProfile.id,
+              title: itemProfile.title,
+              price: itemProfile.price,
+            }
+          : null,
+        buyer: buyerProfile
+          ? {
+              id: buyerProfile.id,
+              display_name: buyerProfile.display_name,
+              trust_score: buyerProfile.trust_score,
+            }
+          : { id: room.buyer_id, display_name: null },
+        seller: sellerProfile
+          ? {
+              id: sellerProfile.id,
+              display_name: sellerProfile.display_name,
+              trust_score: sellerProfile.trust_score,
+            }
+          : { id: room.seller_id, display_name: null },
         last_message: room.last_message,
         last_message_at: room.last_message_at,
         unread_count: unreadCount,
-        created_at: room.created_at
+        created_at: room.created_at,
       };
     });
 
@@ -105,6 +132,20 @@ export const createChatRoom = async (itemId) => {
     if (itemError) throw itemError;
 
     const sellerId = item.seller_id;
+
+    if (!sellerId) {
+      return {
+        res_code: 400,
+        res_msg: 'Seller information is missing for this item.'
+      };
+    }
+
+    if (sellerId === user.id) {
+      return {
+        res_code: 400,
+        res_msg: 'You cannot start a chat with yourself.'
+      };
+    }
 
     const { data: existingRoom, error: checkError } = await supabase
       .from('chat_rooms')
@@ -175,6 +216,38 @@ export const createChatFromPostAuthor = async (postId) => {
       .single();
 
     if (postError) throw postError;
+
+    if (!post?.author_id) {
+      return {
+        res_code: 400,
+        res_msg: 'Author information is missing for this post.'
+      };
+    }
+
+    if (post.author_id === user.id) {
+      return {
+        res_code: 400,
+        res_msg: 'You cannot start a chat with yourself.'
+      };
+    }
+
+    const { data: existingRoom, error: existingError } = await supabase
+      .from('chat_rooms')
+      .select('id')
+      .eq('buyer_id', user.id)
+      .eq('seller_id', post.author_id)
+      .is('item_id', null)
+      .maybeSingle();
+
+    if (existingError) throw existingError;
+
+    if (existingRoom) {
+      return {
+        res_code: 409,
+        res_msg: 'Chat room already exists',
+        chat_room: existingRoom
+      };
+    }
 
     const { data: newChatRoom, error: createError } = await supabase
       .from('chat_rooms')

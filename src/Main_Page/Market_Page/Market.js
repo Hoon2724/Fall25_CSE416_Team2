@@ -64,7 +64,11 @@ function Market({ items = [], loading, errorMsg }) {
                 )}
               </div>
               <div className="item-seller">
-                Seller Name
+                Seller:{" "}
+                {item.seller_display_name ||
+                  item.seller?.display_name ||
+                  item.seller_name ||
+                  "Unknown seller"}
               </div>
             </div>
           </div>
