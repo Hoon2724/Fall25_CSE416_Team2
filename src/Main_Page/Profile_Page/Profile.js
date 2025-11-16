@@ -110,11 +110,11 @@ function Profile() {
                 </div>
             </div>
             <ul className="nav flex-column optionList">
-                <li className="nav-item optionItem">
+                <li className="nav-item optionItemList">
                     <div className="option">My Item</div>
                     <Option mode="myItem" />
                 </li>
-                <li className="nav-item optionItem">
+                <li className="nav-item optionItemList">
                     <div className="option history">Previously viewed items</div>
                     <Option mode="history" />
                 </li>
