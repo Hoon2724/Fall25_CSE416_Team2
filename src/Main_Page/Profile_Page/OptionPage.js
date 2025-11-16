@@ -2,7 +2,7 @@ import './OptionPage.css'
 import Navbar from '../Navbar.js'
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getCurrentUser, getUserPosts, getUserItems, getUserWishlists } from '../../lib/api';
+import { getCurrentUser, getUserPosts, getUserWishlists, removeFromWishlist } from '../../lib/api';
 
 function OptionPage() {
   const location = useLocation();
@@ -12,95 +12,7 @@ function OptionPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const testFavList = [
-        {
-            id: 1,
-            title: "tst1",
-            description: "tst1",
-            category: null,
-            price: 1
-        },
-        {
-            id: 2,
-            title: "tst2",
-            description: "tst2",
-            category: null,
-            price: 2
-        },
-        {
-            id: 3,
-            title: "tst3",
-            description: "tst3",
-            category: null,
-            price: 3
-        },
-        {
-            id: 4,
-            title: "tst4",
-            description: "tst4",
-            category: null,
-            price: 4
-        }
-    ]
-
-    const testPostList = [
-      {
-            id: 4,
-            title: "tst4",
-            description: "tst4",
-            category: null,
-            price: 4
-        },
-        {
-            id: 5,
-            title: "tst5",
-            description: "tst5",
-            category: null,
-            price: 5
-        },
-        {
-            id: 6,
-            title: "tst6",
-            description: "tst6",
-            category: null,
-            price: 6
-        },
-        {
-            id: 7,
-            title: "tst7",
-            description: "tst7",
-            category: null,
-            price: 7
-        },
-        {
-            id: 8,
-            title: "tst8",
-            description: "tst8",
-            category: null,
-            price: 8
-        },
-        {
-            id: 9,
-            title: "tst9",
-            description: "tst9",
-            category: null,
-            price: 9
-        },
-        {
-            id: 10,
-            title: "tst10",
-            description: "tst10",
-            category: null,
-            price: 10
-        },
-        {
-            id: 11,
-            title: "tst11",
-            description: "tst11",
-            category: null,
-            price: 11
-        }
-    ]
+  // Removed test lists; use real API data
 
   // Determine what to show based on URL or default
   const isPosts = location.pathname.includes('post') || location.search.includes('type=posts');
@@ -126,11 +38,7 @@ function OptionPage() {
                 if (isPosts) {
                     const res = await getUserPosts(currentUser.id);
                     if (res.res_code === 200) {
-                        // setItems(res.posts || []);
-
-                        // Test Data
-                        setItems(testPostList);
-
+                        setItems(res.posts || []);
                     } else {
                         setError(res.res_msg || 'Failed to load posts'); 
                     }
@@ -144,11 +52,7 @@ function OptionPage() {
                             price: w.items.price,
                             image: (w.items.item_images && w.items.item_images[0] && w.items.item_images[0].url) || null
                         }));
-                        // setItems(transformed);
-
-                        // Test Data
-                        setItems(testFavList);
-
+                        setItems(transformed);
                     } else {
                         setError(res.res_msg || 'Failed to load wishlists');
                     }
@@ -183,7 +87,28 @@ function OptionPage() {
                   {items.length === 0 ? (
                       <div style={{ padding: 20, textAlign: 'center', color: '#999' }}>No items found</div>
                   ) : (
-                      items.map(item => (
+                      items.map(item => {
+                        const isPostCard = isPosts;
+                        if (isPostCard) {
+                          const created = item.created_at ? new Date(item.created_at) : null;
+                          const dateStr = created ? created.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '';
+                          return (
+                            <div 
+                              key={item.id}
+                              className="opItem_sep"
+                              onClick={() => navigate(`/community/post/${item.id}`)}
+                              style={{ cursor: 'pointer' }}
+                            >
+                              <div className="opInfo_sep" style={{ marginLeft: 0 }}>
+                                <h3 className="opName_sep">{item.title}</h3>
+                                <p className="opPrice_sep">{item.communities?.name || 'Community'}</p>
+                                <p className="opSeller_sep" style={{ color: 'gray' }}>{dateStr}</p>
+                              </div>
+                            </div>
+                          );
+                        }
+                        // wishlist item card
+                        return (
                           <div 
                               key={item.id} 
                               className="opItem_sep"
@@ -192,17 +117,17 @@ function OptionPage() {
                           >
                               <div className="opImage_sep">
                                   <img 
-                                      src={item.image || './profile.png'} 
+                                      src={item.image || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100%" height="100%" fill=\"%23cccccc\"/><text x=\"50%\" y=\"50%\" dominant-baseline=\"middle\" text-anchor=\"middle\" font-size=\"12\" fill=\"%23666666\" style=\"font-family:system-ui%2C%20-apple-system%2C%20Segoe%20UI%2C%20Roboto%2C%20Noto%20Sans%2C%20Helvetica%20Neue%2C%20Arial%2C%20sans-serif;\">No Image</text></svg>'} 
                                       alt={item.title || item.name} 
                                   />
                               </div>
                               <div className="opInfo_sep">
                                   <h3 className="opName_sep">{item.title || item.name}</h3>
                                   <p className="opPrice_sep">{item.price ? `${item.price.toLocaleString()} won` : 'Price not set'}</p>
-                                  <p className="opSeller_sep">Seller Name</p>
                               </div>
                           </div>
-                      ))
+                        );
+                      })
                   )}
               </div>
           )}

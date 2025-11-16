@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
 import Navbar from "../Navbar";
 import "./ItemDetail.css";
-import { createChatRoomFromItem, getItemDetails, recordItemView } from "../../lib/api";
+import { createChatRoomFromItem, getItemDetails, recordItemView, addToWishlist, removeFromWishlist, isItemInWishlist } from "../../lib/api";
 
 function ItemDetail() {
   const { id } = useParams(); // URL에서 아이템 ID 가져오기
@@ -13,6 +13,8 @@ function ItemDetail() {
   const [errorMsg, setErrorMsg] = useState("");
   const [currentUserId, setCurrentUserId] = useState(null);
   const [contacting, setContacting] = useState(false);
+  const [favLoading, setFavLoading] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
   const navigate = useNavigate(); // ✅ 페이지 이동용
 
   useEffect(() => {
@@ -108,20 +110,61 @@ function ItemDetail() {
     loadCurrentUser();
   }, []);
 
+  // Check initial favorite state when item and user are known
+  useEffect(() => {
+    const checkFav = async () => {
+      try {
+        if (!item?.id || !currentUserId) {
+          setIsFavorite(false);
+          return;
+        }
+        const res = await isItemInWishlist(item.id);
+        if (res?.res_code === 200) {
+          setIsFavorite(!!res.in_wishlist);
+        }
+      } catch (_) {
+        setIsFavorite(false);
+      }
+    };
+    checkFav();
+  }, [item?.id, currentUserId]);
+
   if (loading) return <p className="loading">Loading...</p>;
   if (errorMsg) return <p className="error">{errorMsg}</p>;
   if (!item) return <p>Item not found.</p>;
 
-  /* TODO: add current post to user's favorite list */
-  function changeFavorite() {
-    const favClassList = document.getElementById("fav").classList;
-    if(favClassList[0] == "1") {
-      favClassList.replace("1", "0");
-      favClassList.replace("bi-heart-fill", "bi-heart");
+  async function handleToggleFavorite(e) {
+    e?.preventDefault?.();
+    if (!item?.id) return;
+    if (!currentUserId) {
+      alert("Please sign in to use favorites.");
+      return;
     }
-    else {
-      favClassList.replace("0", "1");
-      favClassList.replace("bi-heart", "bi-heart-fill");
+    if (favLoading) return;
+
+    setFavLoading(true);
+    const prev = isFavorite;
+    // Optimistic toggle
+    setIsFavorite(!prev);
+    try {
+      if (!prev) {
+        const res = await addToWishlist(item.id);
+        if (res.res_code !== 201 && res.res_code !== 200 && res.res_code !== 409) {
+          throw new Error(res.res_msg || "Failed to add to favorites");
+        }
+      } else {
+        const res = await removeFromWishlist(item.id);
+        if (res.res_code !== 200) {
+          throw new Error(res.res_msg || "Failed to remove from favorites");
+        }
+      }
+    } catch (err) {
+      console.error("Favorite toggle failed:", err);
+      // Revert on error
+      setIsFavorite(prev);
+      alert(err.message || "Failed to update favorite");
+    } finally {
+      setFavLoading(false);
     }
   }
 
@@ -187,10 +230,16 @@ function ItemDetail() {
                 : null}
             </p>
             <div className="interact-container row">
-              <div className="item-favorite col-lg-1" onClick={changeFavorite}>
-                <div id="fav" className="0 bi bi-heart"></div>
-              <div>Favorite</div>
-            </div>
+              <button
+                type="button"
+                className="item-favorite col-lg-1"
+                onClick={handleToggleFavorite}
+                disabled={favLoading}
+                style={{ cursor: favLoading ? 'not-allowed' : 'pointer' }}
+              >
+                <div className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} id="fav"></div>
+                <div>{isFavorite ? 'Favorited' : 'Favorite'}</div>
+              </button>
             {!item?.seller_id || item.seller_id !== currentUserId ? (
               <button
                 className="item-contact col-lg-1"
