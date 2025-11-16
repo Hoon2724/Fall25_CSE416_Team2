@@ -1,23 +1,33 @@
-.signInLogoCtn {
-    text-align: center;
-    margin: 5px 0px 0px 0px;
-}
-.signInMainLogo {
-    width: 300px;
+.signIn {
+    min-height: 100vh;
 }
 
+.signInLogoCtn {
+    min-height: 100vh;
+    display: flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+
+    border-right-style: dotted;
+    border-color: lightgray;
+}
+.signInMainLogo {
+    width: 500px;
+}
+
+.signInCtn {
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
 .signInTitleCtn {
     text-align: center;
 }
 .signInTitle {
     display: inline-block;
-
-    border-style: solid;
-    border-color: lightgrey;
-    padding: 5px 50px;
-
-    background-color: lightgray;
-    font-size: 30px;
+    font-size: 52px;
+    font-weight: bold;
 }
 
 .googleBtnCtn {

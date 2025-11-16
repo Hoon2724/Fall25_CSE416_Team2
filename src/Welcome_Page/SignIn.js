@@ -10,18 +10,20 @@ function SignIn() {
     }
 
     return (
-        <div className="signIn">
-            <div className="signInLogoCtn">
+        <div className="signIn row align-items-center">
+            <div className="signInLogoCtn col-lg-7">
                 <img src={logo} className="signInMainLogo"></img>
             </div>
-            <div className="signInTitleCtn">
-                <div className="signInTitle">Sign In</div>
-            </div>
-            <div onClick={ openGooglePage } className="googleBtnCtn">
-                <div className="googleLogoCtn">
-                    <img src={googleLogo} className="googleLogo"></img>
+            <div className="signInCtn col-lg-5">
+                <div className="signInTitleCtn">
+                    <div className="signInTitle">Sign In</div>
                 </div>
-                <div className="googleBtn">Continue with Google</div>
+                <div onClick={ openGooglePage } className="googleBtnCtn">
+                    <div className="googleLogoCtn">
+                        <img src={googleLogo} className="googleLogo"></img>
+                    </div>
+                    <div className="googleBtn">Continue with Google</div>
+                </div>
             </div>
         </div>
     )

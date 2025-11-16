@@ -11,26 +11,29 @@ function SignUp() {
     }
 
     return (
-        <div className="signUp">
-            <div className="logoCtn">
+        <div className="signUp row align-items-center">
+            <div className="logoCtn col-lg-7">
                 <img src={logo} className="mainLogo"></img>
             </div>
-            <div className="signUpTitleCtn">
-                <div className="signUpTitle">Sign Up</div>
-            </div>
-            <div className="cautionCtn">
-                <div className="SUNYLogoCtn">
-                    <img src={SUNYLogo} className="SUNYLogo"></img>
+            <div className="signUpCtn col-lg-5">
+                <div className="signUpTitleCtn">
+                    <div className="signUpTitle">Sign Up</div>
                 </div>
-                <div className="caution">Sign up with Google</div>
-                <div className="caution">&#40;SUNY Korea & Stony Brook only&#41;</div>
-            </div>
-            <div onClick={ openGooglePage } className="row googleBtnCtn">
-                <div className="googleLogoCtn">
-                    <img src={googleLogo} className="googleLogo"></img>
+                <div className="cautionCtn">
+                    <div className="SUNYLogoCtn">
+                        <img src={SUNYLogo} className="SUNYLogo"></img>
+                    </div>
+                    <div className="caution">Sign up with Google</div>
+                    <div className="caution">&#40;SUNY Korea & Stony Brook only&#41;</div>
                 </div>
-                <div className="googleBtn">Continue with Google</div>
+                <div onClick={ openGooglePage } className="googleBtnCtn">
+                    <div className="googleLogoCtn">
+                        <img src={googleLogo} className="googleLogo"></img>
+                    </div>
+                    <div className="googleBtn">Continue with Google</div>
+                </div>
             </div>
+                
         </div>
     )
 }

@@ -1,23 +1,33 @@
-.logoCtn {
-    text-align: center;
-    margin: 5px 0px 0px 0px;
-}
-.mainLogo {
-    width: 300px;
+.signUp {
+    min-height: 100vh;
 }
 
+.logoCtn {
+    min-height: 100vh;
+    display: flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+
+    border-right-style: dotted;
+    border-color: lightgray;
+}
+.mainLogo {
+    width: 500px;
+}
+
+.signUpCtn {
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
 .signUpTitleCtn {
     text-align: center;
 }
 .signUpTitle {
     display: inline-block;
-
-    border-style: solid;
-    border-color: lightgrey;
-    padding: 5px 50px;
-
-    background-color: lightgray;
-    font-size: 30px;
+    font-size: 52px;
+    font-weight: bold;
 }
 
 .SUNYLogoCtn {

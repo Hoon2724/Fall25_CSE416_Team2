@@ -1,12 +1,33 @@
 .welcomeSignIn {
     text-align: center;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    min-height: 100vh;
 }
 
 .welcomeLogoCtn {
-    margin: 50px 0px 100px 0px;
+    min-height: 100vh;
+    display: flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+
+    border-right-style: dotted;
+    border-color: lightgray;
 }
 .welcomeMainLogo {
-    width: 300px;
+    width: 500px;
+}
+
+
+.welcomeTitle {
+    font-size: 52px;
+    font-weight: bold;
+}
+.welcomeDesc {
+    color: gray;
+    font-size: 24px;
 }
 
 .signInBtnCtn {
@@ -26,7 +47,7 @@
 
 .signUpBtnCtn {
     text-align: center;
-    margin: 50px;
+    margin: 50px 50px 10px 50px;
 }
 .signUpBtn {
     border-style: solid;
@@ -37,4 +58,8 @@
     background-color: lightgray;
     cursor: pointer;
     font-size: 30px;
+}
+.signUpDesc {
+    color: rgb(255, 96, 96);
+    font-weight: bold;
 }
