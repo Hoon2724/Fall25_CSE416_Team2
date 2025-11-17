@@ -7,6 +7,10 @@
     min-height: 100vh;
 }
 
+.marketCaution {
+    font-size: 16px;
+}
+
 .market-header {
     text-align: center;
     margin-bottom: 20px;

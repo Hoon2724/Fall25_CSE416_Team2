@@ -13,10 +13,6 @@ function Market({ items = [], loading, errorMsg }) {
     return <div className="market-container error-text">{errorMsg}</div>;
   }
 
-  if (!items.length) {
-    return <div className="market-container">No items yet.</div>;
-  }
-
   return (
     <div className="market-container">
       <h2 className="market-title">Latest Items</h2>
@@ -26,7 +22,11 @@ function Market({ items = [], loading, errorMsg }) {
         </div>
       </div>
       <div className="market-items">
-        {items.map((item) => (
+        {
+        items.length === 0 ? 
+        ( <div className="marketCaution">No items yet.</div> )
+        :
+        (items.map((item) => (
           <div
             key={item.id}
             className="market-item"
@@ -72,7 +72,9 @@ function Market({ items = [], loading, errorMsg }) {
               </div>
             </div>
           </div>
-        ))}
+        ))
+      )
+      }
       </div>
     </div>
   );
