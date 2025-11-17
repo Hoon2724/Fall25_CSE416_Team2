@@ -179,6 +179,24 @@ export const createChatRoom = async (itemId) => {
 
     if (createError) throw createError;
 
+    // Broadcast to seller about new chat
+    try {
+      const channel = supabase.channel(`notify:${sellerId}`);
+      await channel.subscribe();
+      await channel.send({
+        type: 'broadcast',
+        event: 'notify',
+        payload: {
+          type: 'item_chat',
+          chat_room_id: newChatRoom.id,
+          item_id: itemId,
+          title: 'New chat on your item',
+          content: ''
+        }
+      });
+      supabase.removeChannel(channel);
+    } catch (_) {}
+
     return {
       res_code: 201,
       res_msg: 'Chat room created successfully',
@@ -264,6 +282,23 @@ export const createChatFromPostAuthor = async (postId) => {
       .single();
 
     if (createError) throw createError;
+
+    // Broadcast to post author
+    try {
+      const channel = supabase.channel(`notify:${post.author_id}`);
+      await channel.subscribe();
+      await channel.send({
+        type: 'broadcast',
+        event: 'notify',
+        payload: {
+          type: 'post_chat',
+          chat_room_id: newChatRoom.id,
+          title: 'New chat on your post',
+          content: ''
+        }
+      });
+      supabase.removeChannel(channel);
+    } catch (_) {}
 
     return {
       res_code: 201,

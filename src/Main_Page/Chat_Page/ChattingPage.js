@@ -12,6 +12,7 @@ import {
     createMessageChannel,
     sendMessageHybrid
 } from '../../lib/api';
+import { supabase } from '../../lib/supabaseClient';
 import './ChattingPage.css';
 
 function ChattingPage() {
@@ -26,12 +27,31 @@ function ChattingPage() {
     const [pendingChatId, setPendingChatId] = useState(null);
     const location = useLocation();
     const messageChannelRef = useRef(null);
+    const roomsReloadTimerRef = useRef(null);
+    const roomsLoadingRef = useRef(false);
 
-    // Load actual chat data
+    // Load current user once and also react to auth state changes
     useEffect(() => {
         loadCurrentUser();
-        loadChatRooms();
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (!session?.user) {
+                setCurrentUser(null);
+            } else {
+                // refresh profile when session becomes ready
+                loadCurrentUser();
+            }
+        });
+        return () => {
+            subscription?.unsubscribe();
+        };
     }, []);
+
+    // After user is ready, load chat rooms
+    useEffect(() => {
+        if (currentUser) {
+            loadChatRooms();
+        }
+    }, [currentUser]);
 
     useEffect(() => {
         const targetChatRoomId = location.state?.chatRoomId;
@@ -48,23 +68,45 @@ function ChattingPage() {
 
     useEffect(() => {
         const unsubscribe = subscribeChatRooms((payload) => {
-            // 새 채팅방 생성/업데이트 시 목록 리로드
-            setPendingChatId(prev => prev || payload?.new?.id || null);
-            loadChatRooms();
+            // 내 채팅방만 처리 (타 계정의 UPDATE 이벤트 무시)
+            const rec = payload?.new || payload?.old || {};
+            if (currentUser && rec.buyer_id && rec.seller_id) {
+                const mine = (rec.buyer_id === currentUser.id) || (rec.seller_id === currentUser.id);
+                if (!mine) return;
+            }
+            const changedId = payload?.new?.id || payload?.old?.id || null;
+            // 현재 보고있는 방의 업데이트라면 무시 (이미 UI에서 반영됨)
+            if (changedId && selectedChat && selectedChat.id === changedId) {
+                return;
+            }
+            if (changedId) setPendingChatId(prev => prev || changedId);
+            // 디바운스 + 로딩 중 가드
+            if (roomsLoadingRef.current) return;
+            if (roomsReloadTimerRef.current) clearTimeout(roomsReloadTimerRef.current);
+            roomsReloadTimerRef.current = setTimeout(() => {
+                loadChatRooms();
+            }, 150);
         });
         return () => {
+            if (roomsReloadTimerRef.current) {
+                clearTimeout(roomsReloadTimerRef.current);
+                roomsReloadTimerRef.current = null;
+            }
             if (typeof unsubscribe === 'function') unsubscribe();
         };
-    }, []);
+    }, [currentUser, selectedChat]);
 
     const loadCurrentUser = async () => {
         try {
             const result = await getCurrentUser();
             if (result.res_code === 200) {
                 setCurrentUser(result.user);
+            } else {
+                setCurrentUser(null);
             }
         } catch (error) {
             console.error('Error loading current user:', error);
+            setCurrentUser(null);
         }
     };
 
@@ -127,9 +169,8 @@ function ChattingPage() {
             },
             // onBackupInsert
             () => {
-                // 백업: 누락 시 동기화
+                // 백업: 누락 시 동기화 (채팅방 목록 전체 리로드는 루프를 유발할 수 있으니 생략)
                 loadMessages(selectedChat.id);
-                loadChatRooms();
             }
         );
 
@@ -145,6 +186,7 @@ function ChattingPage() {
 
     const loadChatRooms = async () => {
         setChatRoomsLoading(true);
+        roomsLoadingRef.current = true;
         setChatRoomsError(null);
         try {
             const result = await getChatRooms();
@@ -175,7 +217,12 @@ function ChattingPage() {
                     desiredChat = transformedChats[0];
                 }
 
-                setSelectedChat(desiredChat || null);
+                // Only update selectedChat if it actually changed
+                const currentId = selectedChat?.id || null;
+                const nextId = desiredChat?.id || null;
+                if (currentId !== nextId) {
+                    setSelectedChat(desiredChat || null);
+                }
 
                 if (pendingChatId && desiredChat) {
                     setPendingChatId(null);
@@ -186,6 +233,7 @@ function ChattingPage() {
             setChatRoomsError('Failed to load chat rooms.');
         } finally {
             setChatRoomsLoading(false);
+            roomsLoadingRef.current = false;
         }
     };
 

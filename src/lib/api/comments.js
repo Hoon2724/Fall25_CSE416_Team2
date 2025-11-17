@@ -63,6 +63,32 @@ export const createComment = async (postId, commentData) => {
 
     await adjustCommentCount(postId, 1);
 
+    // Broadcast to post author about new comment
+    try {
+      const { data: post } = await supabase
+        .from('community_posts')
+        .select('author_id')
+        .eq('id', postId)
+        .single();
+      const authorId = post?.author_id;
+      if (authorId && authorId !== user.id) {
+        const channel = supabase.channel(`notify:${authorId}`);
+        await channel.subscribe();
+        await channel.send({
+          type: 'broadcast',
+          event: 'notify',
+          payload: {
+            type: 'comment',
+            post_id: postId,
+            comment_id: newComment.id,
+            title: 'New comment on your post',
+            content
+          }
+        });
+        supabase.removeChannel(channel);
+      }
+    } catch (_) {}
+
     return createSuccessResponse('Comment created successfully', {
       id: newComment.id,
       content: newComment.content,

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Navbar.css';
 import logo from '../Welcome_Page/logo.png';
-import { getNotifications, getUnreadNotificationCount, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification } from '../lib/api';
+import { supabase } from '../lib/supabaseClient';
 
 function Navbar() {
     const [notifications, setNotifications] = useState([]);
@@ -10,87 +10,84 @@ function Navbar() {
     const [showNotifications, setShowNotifications] = useState(false);
     const [notificationsLoading, setNotificationsLoading] = useState(false);
 
+    // Broadcast-only model: no polling
     useEffect(() => {
-        const loadUnreadCount = async () => {
-            try {
-                const res = await getUnreadNotificationCount();
-                if (res.res_code === 200) {
-                    setUnreadCount(res.unread_count || 0);
-                }
-            } catch (e) {
-                console.error('Error loading unread count:', e);
-            }
-        };
-        loadUnreadCount();
-        const interval = setInterval(loadUnreadCount, 30000); // Update every 30 seconds
-        return () => clearInterval(interval);
-    }, []);
-
-    useEffect(() => {
-        if (showNotifications) {
-            loadNotifications();
-        }
+        setNotificationsLoading(false);
     }, [showNotifications]);
 
-    const loadNotifications = async () => {
-        setNotificationsLoading(true);
-        try {
-            const res = await getNotifications({ limit: 20 });
-            if (res.res_code === 200) {
-                setNotifications(res.notifications || []);
-                setUnreadCount(res.unread_count || 0);
+    // Broadcast subscriptions for notifications (subscribe once after mount/login)
+    useEffect(() => {
+        let channelUser;
+        let channelAll;
+        async function subscribe() {
+            try {
+                const { data } = await supabase.auth.getUser();
+                const uid = data?.user?.id;
+                if (!uid) return;
+                // user-specific channel
+                channelUser = supabase
+                    .channel(`notify:${uid}`)
+                    .on('broadcast', { event: 'notify' }, ({ payload }) => {
+                        const n = {
+                            id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                            type: payload?.type || 'announcement',
+                            title: payload?.title || 'Notification',
+                            content: payload?.content || '',
+                            created_at: new Date().toISOString(),
+                            is_read: false,
+                            payload
+                        };
+                        setNotifications(prev => [n, ...prev].slice(0, 50));
+                        setUnreadCount(prev => Math.min(99, prev + 1));
+                    })
+                    .subscribe();
+                // global announcements
+                channelAll = supabase
+                    .channel('notify:all')
+                    .on('broadcast', { event: 'notify' }, ({ payload }) => {
+                        const n = {
+                            id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                            type: payload?.type || 'announcement',
+                            title: payload?.title || 'Announcement',
+                            content: payload?.content || '',
+                            created_at: new Date().toISOString(),
+                            is_read: false,
+                            payload
+                        };
+                        setNotifications(prev => [n, ...prev].slice(0, 50));
+                        setUnreadCount(prev => Math.min(99, prev + 1));
+                    })
+                    .subscribe();
+            } catch (e) {
+                console.error('Failed to subscribe broadcast notifications', e);
             }
-        } catch (e) {
-            console.error('Error loading notifications:', e);
-        } finally {
-            setNotificationsLoading(false);
         }
+        subscribe();
+        return () => {
+            if (channelUser) supabase.removeChannel(channelUser);
+            if (channelAll) supabase.removeChannel(channelAll);
+        };
+    }, []);
+
+    const handleMarkAsRead = (notificationId, e) => {
+        if (e && e.stopPropagation) e.stopPropagation();
+        setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n));
+        setUnreadCount(prev => Math.max(0, prev - 1));
     };
 
-    const handleMarkAsRead = async (notificationId, e) => {
-        if (e && e.stopPropagation) {
-            e.stopPropagation();
-        }
-        try {
-            const res = await markNotificationAsRead(notificationId);
-            if (res.res_code === 200) {
-                setNotifications(prev => prev.map(n => 
-                    n.id === notificationId ? { ...n, is_read: true } : n
-                ));
-                setUnreadCount(prev => Math.max(0, prev - 1));
-            }
-        } catch (err) {
-            console.error('Error marking notification as read:', err);
-        }
-    };
-
-    const handleMarkAllAsRead = async (e) => {
+    const handleMarkAllAsRead = (e) => {
         e.stopPropagation();
-        try {
-            const res = await markAllNotificationsAsRead();
-            if (res.res_code === 200) {
-                setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-                setUnreadCount(0);
-            }
-        } catch (e) {
-            console.error('Error marking all as read:', e);
-        }
+        setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+        setUnreadCount(0);
     };
 
-    const handleDelete = async (notificationId, e) => {
+    const handleDelete = (notificationId, e) => {
         e.stopPropagation();
-        try {
-            const res = await deleteNotification(notificationId);
-            if (res.res_code === 200) {
-                const deleted = notifications.find(n => n.id === notificationId);
-                if (deleted && !deleted.is_read) {
-                    setUnreadCount(prev => Math.max(0, prev - 1));
-                }
-                setNotifications(prev => prev.filter(n => n.id !== notificationId));
-            }
-        } catch (e) {
-            console.error('Error deleting notification:', e);
+        const deleted = notifications.find(n => n.id === notificationId);
+        if (deleted && !deleted.is_read) {
+            setUnreadCount(prev => Math.max(0, prev - 1));
         }
+        setNotifications(prev => prev.filter(n => n.id !== notificationId));
     };
 
     return (
