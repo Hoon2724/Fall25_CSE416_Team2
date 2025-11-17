@@ -232,11 +232,14 @@ function ChattingPage() {
                     desiredChat = transformedChats[0];
                 }
 
-                // Only update selectedChat if it actually changed
+                // Update selectedChat - always sync with latest data from chatRooms
                 const currentId = selectedChat?.id || null;
                 const nextId = desiredChat?.id || null;
                 if (currentId !== nextId) {
                     setSelectedChat(desiredChat || null);
+                } else if (desiredChat && currentId === nextId) {
+                    // Same chat selected, but update with latest data (including name)
+                    setSelectedChat(desiredChat);
                 }
 
                 if (pendingChatId && desiredChat) {
@@ -348,22 +351,25 @@ function ChattingPage() {
                 },
                 onAfterPersist: (msg) => {
                     const now = new Date().toISOString();
-                    setChatRooms(prev => prev.map(chat => 
-                        chat.id === selectedChat.id 
-                            ? { 
-                                ...chat, 
-                                lastMessage: msg.content, 
-                                timestamp: formatTimestamp(now),
-                                lastMessageAt: now
-                            }
-                            : chat
-                    ));
-                    setSelectedChat(prev => prev ? { 
-                        ...prev, 
-                        lastMessage: msg.content, 
-                        timestamp: formatTimestamp(now),
-                        lastMessageAt: now
-                    } : prev);
+                    // Update chatRooms and sync selectedChat to ensure name stays in sync
+                    setChatRooms(prevRooms => {
+                        const updatedRooms = prevRooms.map(chat => 
+                            chat.id === selectedChat.id 
+                                ? { 
+                                    ...chat, 
+                                    lastMessage: msg.content, 
+                                    timestamp: formatTimestamp(now),
+                                    lastMessageAt: now
+                                }
+                                : chat
+                        );
+                        // Sync selectedChat with updated room data to ensure name matches
+                        const updatedChat = updatedRooms.find(chat => chat.id === selectedChat.id);
+                        if (updatedChat) {
+                            setSelectedChat(updatedChat);
+                        }
+                        return updatedRooms;
+                    });
                 }
             },
             messageChannelRef.current?.sendBroadcast
