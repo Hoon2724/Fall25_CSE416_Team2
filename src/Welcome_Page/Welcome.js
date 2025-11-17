@@ -24,7 +24,7 @@ function Welcome() {
                 <div className="signUpBtnCtn">
                     <div onClick={ openSignUpPage } className="signUpBtn">Sign Up</div>
                 </div>
-                <div className="signUpDesc">Only SUNY Korea or Stony Brook email will be accepted.</div>
+                {/* <div className="signUpDesc">Only SUNY Korea or Stony Brook email will be accepted.</div> */}
                 <hr />
                 <div className="signInBtnCtn">
                     <div onClick={ openSignInPage } className="signInBtn">Sign In</div>

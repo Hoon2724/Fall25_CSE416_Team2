@@ -20,11 +20,11 @@ function SignUp() {
                     <div className="signUpTitle">Sign Up</div>
                 </div>
                 <div className="cautionCtn">
-                    <div className="SUNYLogoCtn">
+                    {/* <div className="SUNYLogoCtn">
                         <img src={SUNYLogo} className="SUNYLogo"></img>
-                    </div>
+                    </div> */}
                     <div className="caution">Sign up with Google</div>
-                    <div className="caution">&#40;SUNY Korea & Stony Brook only&#41;</div>
+                    {/* <div className="caution">&#40;SUNY Korea & Stony Brook only&#41;</div> */}
                 </div>
                 <div onClick={ openGooglePage } className="googleBtnCtn">
                     <div className="googleLogoCtn">
