@@ -30,6 +30,7 @@ export default function Post() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [contactingAuthor, setContactingAuthor] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const loadVotes = async (postId) => {
@@ -86,8 +87,17 @@ export default function Post() {
   useEffect(() => {
     const loadCurrentUser = async () => {
       const { data, error } = await supabase.auth.getUser();
-      if (!error) {
-        setCurrentUserId(data?.user?.id || null);
+      if (!error && data?.user) {
+        setCurrentUserId(data.user.id);
+        // Check if user is admin
+        const { data: userProfile } = await supabase
+          .from('users')
+          .select('is_admin')
+          .eq('id', data.user.id)
+          .single();
+        if (userProfile?.is_admin) {
+          setIsAdmin(true);
+        }
       }
     };
     loadCurrentUser();
@@ -274,12 +284,16 @@ export default function Post() {
                       {contactingAuthor ? 'Starting chat...' : 'Contact'}
                     </button>
                   )}
-                  <button className="post-edit-btn" onClick={startEditing}>
-                    Edit
-                  </button>
-                  <button className="post-delete-btn" onClick={handleDelete}>
-                    Delete
-                  </button>
+                  {(post.author?.id === currentUserId || isAdmin) && (
+                    <button className="post-edit-btn" onClick={startEditing}>
+                      Edit
+                    </button>
+                  )}
+                  {(post.author?.id === currentUserId || isAdmin) && (
+                    <button className="post-delete-btn" onClick={handleDelete}>
+                      Delete
+                    </button>
+                  )}
                 </div>
                 {post.community?.name || 'Community'}<br />{formattedDate(post.created_at)}
               </div>

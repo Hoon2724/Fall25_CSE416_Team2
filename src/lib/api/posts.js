@@ -226,7 +226,16 @@ export const updatePost = async (postId, updates) => {
 
     if (postError) throw postError;
 
-    if (post.author_id !== user.id) {
+    // Check if user is admin
+    const { data: userProfile } = await supabase
+      .from('users')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single();
+
+    const isAdmin = userProfile?.is_admin || false;
+
+    if (post.author_id !== user.id && !isAdmin) {
       return {
         res_code: 403,
         res_msg: 'No permission to modify this post'
@@ -284,7 +293,16 @@ export const deletePost = async (postId) => {
 
     if (postError) throw postError;
 
-    if (post.author_id !== user.id) {
+    // Check if user is admin
+    const { data: userProfile } = await supabase
+      .from('users')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single();
+
+    const isAdmin = userProfile?.is_admin || false;
+
+    if (post.author_id !== user.id && !isAdmin) {
       return {
         res_code: 403,
         res_msg: 'No permission to delete this post'
