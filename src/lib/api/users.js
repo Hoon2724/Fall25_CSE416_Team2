@@ -14,7 +14,7 @@ export const getCurrentUser = async () => {
 
     const { data: userProfile, error: profileError } = await supabase
       .from('users')
-      .select('id, email, display_name, profile_image_url, school_verified, trust_score, total_reviews, created_at')
+      .select('id, email, display_name, profile_image_url, school_verified, trust_score, total_reviews, is_admin, created_at')
       .eq('id', user.id)
       .single();
 

@@ -192,18 +192,33 @@ function ChattingPage() {
             const result = await getChatRooms();
             if (result.res_code === 200) {
                 // Transform API data to existing format
-                const transformedChats = result.chat_rooms.map(chatRoom => ({
-                    id: chatRoom.id,
-                    name: chatRoom.item ? chatRoom.item.title : 
-                          (chatRoom.buyer.display_name || chatRoom.seller.display_name),
-                    lastMessage: chatRoom.last_message || 'No messages yet',
-                    timestamp: formatTimestamp(chatRoom.last_message_at),
-                    lastMessageAt: chatRoom.last_message_at,
-                    unreadCount: chatRoom.unread_count ?? 0,
-                    buyer: chatRoom.buyer,
-                    seller: chatRoom.seller,
-                    item: chatRoom.item
-                }));
+                const transformedChats = result.chat_rooms.map(chatRoom => {
+                    // Determine chat room name
+                    let chatName;
+                    if (chatRoom.item) {
+                        // Item-based chat: show item title
+                        chatName = chatRoom.item.title;
+                    } else {
+                        // Community contact chat: show the other person's name
+                        // If current user is buyer, show seller's name; if seller, show buyer's name
+                        const isCurrentUserBuyer = currentUser && chatRoom.buyer.id === currentUser.id;
+                        chatName = isCurrentUserBuyer 
+                            ? (chatRoom.seller.display_name || 'Unknown User')
+                            : (chatRoom.buyer.display_name || 'Unknown User');
+                    }
+                    
+                    return {
+                        id: chatRoom.id,
+                        name: chatName,
+                        lastMessage: chatRoom.last_message || 'No messages yet',
+                        timestamp: formatTimestamp(chatRoom.last_message_at),
+                        lastMessageAt: chatRoom.last_message_at,
+                        unreadCount: chatRoom.unread_count ?? 0,
+                        buyer: chatRoom.buyer,
+                        seller: chatRoom.seller,
+                        item: chatRoom.item
+                    };
+                });
                 setChatRooms(transformedChats);
 
                 let desiredChat = null;
