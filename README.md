@@ -6,7 +6,7 @@ While existing secondhand platforms (e.g., Carrot, Bungaejangter) are widely use
 ### Problems & Our Solutions
 1. **Trust and Safety**  
    - *Problem:* Open platforms make it difficult to verify user identity, leading to potential scams.  
-   - *Solution:* By restricting sign-ups to school email addresses (e.g., `@sunykorea.ac.kr`), we ensure transactions occur only between verified students, creating a safer environment.  
+   - *Solution:* By restricting sign-ups to Google accounts, we ensure transactions occur only between verified people, creating a safer environment.  
 
 2. **Convenient Trading Environment**  
    - *Problem:* Meeting strangers off-campus can be inconvenient and time-consuming.  
