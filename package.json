@@ -20,8 +20,9 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "prebuild": "node -e \"const fs = require('fs'); const path = require('path'); const buildDir = path.join(process.cwd(), 'build'); if (fs.existsSync(buildDir)) { fs.rmSync(buildDir, { recursive: true, force: true }); }\"",
     "build": "react-scripts build",
-    "build:clean": "rm -rf build && react-scripts build",
+    "build:clean": "npm run prebuild && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

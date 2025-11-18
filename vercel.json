@@ -3,6 +3,26 @@
   "outputDirectory": "build",
   "framework": "create-react-app",
   "installCommand": "npm install",
-  "devCommand": "npm start"
+  "devCommand": "npm start",
+  "headers": [
+    {
+      "source": "/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/(.*\\.js|.*\\.css)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    }
+  ]
 }
 
