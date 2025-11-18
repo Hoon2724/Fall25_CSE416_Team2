@@ -86,18 +86,26 @@ export default function Post() {
 
   useEffect(() => {
     const loadCurrentUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (!error && data?.user) {
-        setCurrentUserId(data.user.id);
-        // Check if user is admin
-        const { data: userProfile } = await supabase
-          .from('users')
-          .select('is_admin')
-          .eq('id', data.user.id)
-          .single();
-        if (userProfile?.is_admin) {
-          setIsAdmin(true);
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (!error && data?.user) {
+          const userId = data.user.id;
+          setCurrentUserId(userId);
+          // Check if user is admin
+          const { data: userProfile } = await supabase
+            .from('users')
+            .select('is_admin')
+            .eq('id', userId)
+            .single();
+          if (userProfile?.is_admin) {
+            setIsAdmin(true);
+          }
+        } else {
+          setCurrentUserId(null);
         }
+      } catch (e) {
+        console.error('[Post] Failed to load current user', e);
+        setCurrentUserId(null);
       }
     };
     loadCurrentUser();
@@ -284,16 +292,27 @@ export default function Post() {
                       {contactingAuthor ? 'Starting chat...' : 'Contact'}
                     </button>
                   )}
-                  {post.author && post.author.id && currentUserId && String(post.author.id) === String(currentUserId) ? (
-                    <>
-                      <button className="post-edit-btn" onClick={startEditing}>
-                        Edit
-                      </button>
-                      <button className="post-delete-btn" onClick={handleDelete}>
-                        Delete
-                      </button>
-                    </>
-                  ) : null}
+                  {(() => {
+                    // Strict check: only show if both values exist and match exactly
+                    const authorId = post?.author?.id;
+                    const userId = currentUserId;
+                    const isAuthor = authorId && userId && String(authorId) === String(userId);
+                    
+                    if (!isAuthor) {
+                      return null;
+                    }
+                    
+                    return (
+                      <>
+                        <button className="post-edit-btn" onClick={startEditing}>
+                          Edit
+                        </button>
+                        <button className="post-delete-btn" onClick={handleDelete}>
+                          Delete
+                        </button>
+                      </>
+                    );
+                  })()}
                 </div>
                 {post.community?.name || 'Community'}<br />{formattedDate(post.created_at)}
               </div>
