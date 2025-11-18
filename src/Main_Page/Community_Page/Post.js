@@ -284,12 +284,24 @@ export default function Post() {
                       {contactingAuthor ? 'Starting chat...' : 'Contact'}
                     </button>
                   )}
-                  {post.author?.id === currentUserId && (
+                  {(() => {
+                    // Debug: log values to check why button might be showing
+                    if (post && currentUserId) {
+                      console.log('[Post] Edit button check:', {
+                        'post.author?.id': post.author?.id,
+                        'currentUserId': currentUserId,
+                        'areEqual': post.author?.id === currentUserId,
+                        'shouldShow': post.author?.id && currentUserId && post.author.id === currentUserId
+                      });
+                    }
+                    return null;
+                  })()}
+                  {post.author?.id && currentUserId && post.author.id === currentUserId && (
                     <button className="post-edit-btn" onClick={startEditing}>
                       Edit
                     </button>
                   )}
-                  {post.author?.id === currentUserId && (
+                  {post.author?.id && currentUserId && post.author.id === currentUserId && (
                     <button className="post-delete-btn" onClick={handleDelete}>
                       Delete
                     </button>
