@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "../Navbar.js";
 import "./ItemPost.css";
 import { supabase } from "../../lib/supabaseClient";
@@ -13,13 +13,37 @@ function ItemPost() {
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [currentUserId, setCurrentUserId] = useState(null);
   const navigate = useNavigate();
 
-  /** 🔸 파일 이름을 Supabase key용으로 안전하게 변환 (한글/특수문자 → _) */
-  function sanitizeFileName(name) {
-    return (name || "image")
-      .normalize("NFKD")        // 유니코드 분해
-      .replace(/[^\w.-]+/g, "_"); // 영문/숫자/언더바/점/하이픈만 남기기
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (error) {
+        console.warn("[ItemPost] Failed to load user session", error);
+        setCurrentUserId(null);
+        return;
+      }
+      setCurrentUserId(data?.user?.id || null);
+    };
+    fetchUser();
+  }, []);
+
+  /** 🔸 한글/특수문자 포함 파일명을 안전한 ASCII 파일명으로 변환 */
+  function makeSafeFileName(originalName, forcedExt) {
+    // 확장자 분리
+    const extMatch = originalName.match(/\.[^.]+$/);
+    let ext = forcedExt || (extMatch ? extMatch[0].toLowerCase() : "");
+
+    if (!ext) ext = ".jpg"; // 확장자 없으면 jpg로
+
+    // 확장자 제거한 base 이름
+    const base = originalName.replace(/\.[^.]+$/, "");
+
+    // 영문/숫자/언더바/하이픈만 남기고 나머지는 _
+    const safeBase = base.replace(/[^\w\-]+/g, "_") || "image";
+
+    return safeBase + ext;
   }
 
   /** 🔸 jfif → jpeg 변환 */
@@ -48,19 +72,17 @@ function ItemPost() {
       canvas.toBlob(res, "image/jpeg", 0.92)
     );
 
-    const baseName = file.name.replace(/\.[^.]+$/, "") || "image";
-    const safeBase = sanitizeFileName(baseName);
-    const newName = safeBase + ".jpg";
-
+    // 🔹 여기서 안전한 파일 이름으로 변경 (한글/특수문자 제거)
+    const newName = makeSafeFileName(file.name, ".jpg");
     return new File([blob], newName, { type: "image/jpeg" });
   }
 
   /** 🔸 Supabase Storage 업로드 후 공개 URL 반환 */
   async function uploadAndGetPublicUrl(file) {
-    const userId = "guest";
+    const userId = currentUserId || "guest";
 
-    // 파일 이름 sanitize
-    const safeName = sanitizeFileName(file.name || "image.jpg");
+    // 🔹 업로드 경로에 들어가는 파일 이름도 안전하게 변환
+    const safeName = makeSafeFileName(file.name);
     const path = `user-${userId}/${Date.now()}-${safeName}`;
 
     const ext = file.name.split(".").pop()?.toLowerCase();
@@ -78,9 +100,7 @@ function ItemPost() {
       throw new Error(error.message || "Upload failed");
     }
 
-    const { data: pub } = supabase.storage
-      .from("items")
-      .getPublicUrl(data.path);
+    const { data: pub } = supabase.storage.from("items").getPublicUrl(data.path);
     console.log("[upload ok]", pub?.publicUrl);
     return pub.publicUrl;
   }
@@ -121,15 +141,20 @@ function ItemPost() {
         setTags((res?.hashtags || []).map((h) => h.replace(/^#/, "")));
       } catch (err) {
         console.warn("classify failed", err);
-        setErrorMsg("Image classify failed (upload succeeded).");
+        setErrorMsg("Image classification fialed (upload is successful)");
       }
     } catch (err) {
       console.error(err);
-      setErrorMsg(err.message || "Upload failed");
+      setErrorMsg(err.message || "Error during image upload");
     } finally {
       setLoading(false);
       e.target.value = "";
     }
+  }
+
+  /** 🔸 썸네일 클릭 시 해당 이미지 제거 */
+  function removeImage(url) {
+    setImageUrls((prev) => prev.filter((u) => u !== url));
   }
 
   /** 🔸 게시물 등록 */
@@ -138,10 +163,12 @@ function ItemPost() {
     setErrorMsg("");
     try {
       if (!title.trim()) throw new Error("Title is required.");
+      if (!currentUserId) throw new Error("Please sign in to post an item.");
 
+      // price: only integer allowed; empty -> null
       const cleanPrice =
-        price && String(price).trim() !== ""
-          ? Number(String(price).replace(/[^0-9.]/g, ""))
+        price !== "" && price != null
+          ? parseInt(String(price).replace(/\D/g, ""), 10)
           : null;
 
       const { data: itemRow, error: itemErr } = await supabase
@@ -151,6 +178,7 @@ function ItemPost() {
           description: desc?.trim() || null,
           category: category?.trim() || null,
           price: cleanPrice,
+          seller_id: currentUserId,
         })
         .select("id")
         .single();
@@ -165,9 +193,7 @@ function ItemPost() {
           url,
           sort_order: i,
         }));
-        const { error: imgErr } = await supabase
-          .from("item_images")
-          .insert(rows);
+        const { error: imgErr } = await supabase.from("item_images").insert(rows);
         if (imgErr) throw imgErr;
       }
 
@@ -177,9 +203,7 @@ function ItemPost() {
           item_id: itemId,
           tag: t.replace(/^#/, ""),
         }));
-        const { error: tagErr } = await supabase
-          .from("item_tags")
-          .insert(rows);
+        const { error: tagErr } = await supabase.from("item_tags").insert(rows);
         if (tagErr) throw tagErr;
       }
 
@@ -193,7 +217,7 @@ function ItemPost() {
         },
       });
 
-      alert("Successful posting!");
+      alert("Item posted successfully!");
       setTitle("");
       setDesc("");
       setPrice("");
@@ -203,7 +227,7 @@ function ItemPost() {
       navigate(`../home`);
     } catch (err) {
       console.error(err);
-      setErrorMsg(err.message || "Error on posting item");
+      setErrorMsg(err.message || "error during posting");
     } finally {
       setLoading(false);
     }
@@ -230,7 +254,21 @@ function ItemPost() {
             {imageUrls.length > 0 && (
               <div className="preview-grid">
                 {imageUrls.map((u) => (
-                  <img key={u} src={u} className="preview-thumb" alt="preview" />
+                  <div key={u} className="preview-item-wrapper">
+                    <img src={u} className="preview-thumb" alt="preview" />
+                    <button
+                      type="button"
+                      className="preview-remove-btn"
+                      aria-label="Remove image"
+                      title="Remove this image"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeImage(u);
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -263,8 +301,11 @@ function ItemPost() {
               <label className="form-label">Price</label>
               <input
                 className="form-input"
+                type="text"
+                inputMode="numeric"
+                pattern="\\d*"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e) => setPrice(e.target.value.replace(/\D/g, ""))}
                 placeholder="Enter price (e.g., 40000)"
               />
             </div>
@@ -283,9 +324,7 @@ function ItemPost() {
 
             {/* 항상 수정 가능한 Tags */}
             <div className="form-group">
-              <label className="form-label">
-                Tags (auto, comma separated)
-              </label>
+              <label className="form-label">Tags (auto, comma separated)</label>
               <input
                 className="form-input"
                 value={tags.join(", ")}
@@ -303,11 +342,7 @@ function ItemPost() {
 
             {/* 등록 버튼 */}
             <div className="post-section">
-              <button
-                className="post-button"
-                onClick={onPost}
-                disabled={loading}
-              >
+              <button className="post-button" onClick={onPost} disabled={loading}>
                 {loading ? "Processing..." : "Click to post"}
               </button>
               {errorMsg && <p className="error-text">{errorMsg}</p>}
