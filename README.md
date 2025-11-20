@@ -66,7 +66,7 @@ There are no specific instruction regarding the setup for this application. You 
    - FrontEnd: UI refinement, mobile responsiveness, final testing.
    - BackEnd: Finalize API, enable monitoring/logging, connect production Supabase.
    - AI: Integrate final AI tagging + recommendation into live app.
-   - *Note*: Deploy to Vercel + Supabase, conduct beta testing.
+   - *Note: Deploy to Vercel + Supabase, conduct beta testing.*
 
 ## Bug Tracking
 As mentioned in the Communication section, we are currently using the Google Spreadsheet to list the problems with our application. As of current status, we are recommending everyone to use this Spreadsheet to report bugs.
