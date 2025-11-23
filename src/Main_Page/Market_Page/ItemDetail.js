@@ -210,7 +210,6 @@ function ItemDetail() {
             <p className="item-desc">{item.description}</p>
             <p><b>Category:</b> {item.category || "N/A"}</p>
             <p><b>Price:</b> {item.price ? `${item.price}₩` : "N/A"}</p>
-            <p><b>Tags:</b> {item.tags?.join(", ") || "N/A"}</p>
             <p>
               <b>Seller:</b>{" "}
               {item.seller_display_name ||
@@ -229,6 +228,7 @@ function ItemDetail() {
                   }/5.0)`
                 : null}
             </p>
+            <p className="itemTags"><b>Tags:</b> {item.tags?.join(", ") || "N/A"}</p>
             <div className="interact-container row">
               <button
                 type="button"
