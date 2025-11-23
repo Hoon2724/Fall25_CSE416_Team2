@@ -18,7 +18,7 @@ function Market({ items = [], loading, errorMsg }) {
       <h2 className="market-title">Latest Items</h2>
       <div className="itemUploadButton d-flex justify-content-center align-items-center">
         <div className="itemUploadBtn d-flex justify-content-center align-items-center" onClick={() => navigate(`/item-post`)}>
-            <div className="post-text">List your item</div>
+            <span className="uploadIcon bi bi-plus-circle-fill"></span>
         </div>
       </div>
       <div className="market-items">

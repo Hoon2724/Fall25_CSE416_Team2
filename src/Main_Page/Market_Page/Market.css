@@ -2,7 +2,8 @@
 .market-container {
     padding: 20px;
     max-width: 1200px;
-    margin: 0 auto;
+    align-items: center;
+    justify-content: center;
     position: relative;
     min-height: 100vh;
 }
@@ -191,40 +192,55 @@
 
 /* Post Button */
 .itemUploadButton {
-    position: sticky;
-    top: 5px;
+    position: fixed;
+    top: 80%;
+    left: 85%;
     cursor: pointer;
-    transition: background-color 0.2s ease;
-    width: auto;
 
     margin-bottom: 10px;
 }
 
 .itemUploadBtn {
     background-color: rgb(62, 104, 255);
-    width: 500px;
-    border-radius: 8px;
-    padding: 15px 40px;
+    transition: background-color 0.2s ease;
+    width: 100px;
+    border-radius: 100%;
+    padding: 10px;
     font-size: 1.2rem;
     font-weight: 600;
     color: white;
 }
+.itemUploadBtn:hover {
+    background-color: skyblue;
+    color: black;
+}
+
+.itemUploadBtn .uploadIcon {
+    font-size: 55px;
+}
+
 /* Mobile Post Button Adjustment */
 @media (max-width: 768px) {
-    .post-button {
-        bottom: 80px; /* Above mobile navigation */
-        left: 50%;
-        transform: translateX(-50%);
-        right: auto;
+    .itemUploadButton {
+        position: fixed;
+        top: 88%;
+        left: 85%;
+        cursor: pointer;
+
+        margin-bottom: 10px;
     }
-    
-    .post-btn {
-        padding: 12px 20px;
-        font-size: 1rem;
+
+    .itemUploadBtn {
+        background-color: rgb(62, 104, 255);
+        width: 80px;
+        border-radius: 100%;
+        padding: 10px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: white;
     }
-    
-    .post-icon {
-        font-size: 1.3rem;
-        margin-right: 6px;
+
+    .itemUploadBtn .uploadIcon {
+        font-size: 40px;
     }
 }

@@ -4,6 +4,8 @@ import Navbar from "./Navbar.js";
 import Market from "./Market_Page/Market.js";
 import { getLatestItems } from "../lib/api";
 
+import './MainContent.css'
+
 function MainContent() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,8 +38,10 @@ function MainContent() {
   return (
     <div className="mainContentCtn">
       <Navbar />
-      {/* DB에서 불러온 목록 + 상태를 Market으로 전달 */}
-      <Market items={items} loading={loading} errorMsg={errorMsg} />
+      <div className="mainViewCtn">
+        {/* DB에서 불러온 목록 + 상태를 Market으로 전달 */}
+        <Market items={items} loading={loading} errorMsg={errorMsg} />
+      </div>
     </div>
   );
 }
