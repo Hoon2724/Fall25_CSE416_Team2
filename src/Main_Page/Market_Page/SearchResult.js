@@ -43,7 +43,7 @@ function SearchResult() {
 
                 <div className="itemUploadButton d-flex justify-content-center align-items-center">
                     <div className="itemUploadBtn d-flex justify-content-center align-items-center" onClick={() => navigate(`/item-post`)}>
-                        <div className="post-text">List your item</div>
+                        <div className="uploadIcon bi bi-plus-circle-fill"></div>
                     </div>
                 </div>
                 

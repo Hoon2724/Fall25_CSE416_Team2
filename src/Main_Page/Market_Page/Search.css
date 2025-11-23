@@ -182,33 +182,6 @@
         padding: 12px 15px;
         font-size: 1.1rem;
     }
-
-    .history-title {
-        font-size: 1.1rem;
-    }
-
-    .history-text {
-        font-size: 0.95rem;
-    }
-
-    .suggestion-btn {
-        font-size: 0.95rem;
-        padding: 8px 12px;
-    }
-
-    .mobile-keyboard {
-        display: flex;
-    }
-
-    .key-btn {
-        padding: 6px 8px;
-        font-size: 0.8rem;
-        min-width: 25px;
-    }
-
-    .special-key {
-        font-size: 0.7rem;
-    }
 }
 
 /* Desktop View */

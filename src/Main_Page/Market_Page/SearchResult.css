@@ -37,6 +37,13 @@
     gap: 20px;
     margin-bottom: 100px; /* Space for fixed post button */
 }
+.search-result-item {
+    background-color: lightgray;
+    border-radius: 10px;
+}
+.search-result-item:hover {
+    background-color: rgb(173, 173, 173);
+}
 
 /* Mobile View - Single Column */
 @media (max-width: 768px) {
