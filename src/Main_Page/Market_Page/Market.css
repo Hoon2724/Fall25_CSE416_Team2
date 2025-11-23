@@ -79,43 +79,51 @@
         border-radius: 20px;
     }
     
-    .item-image {
+    .market-image {
         flex-shrink: 0;
         margin-right: 15px;
+        width: 100px;
+        height: 100px;
     }
     
-    .item-image img {
-        width: 80px;
-        height: 80px;
+    .market-image img {
         border-radius: 8px;
         object-fit: cover;
     }
     
-    .item-info {
+    .market-item .item-info {
         flex: 1;
         display: flex;
         flex-direction: column;
         justify-content: center;
     }
     
-    .item-name {
-        font-size: 1.1rem;
+    .market-item .item-name {
+        font-size: 1.2rem;
         font-weight: 600;
         margin: 0 0 8px 0;
         color: black;
     }
     
-    .item-price {
+    .market-item .item-price {
         font-size: 1rem;
         font-weight: bold;
         color: black;
         margin: 0 0 5px 0;
     }
-    
-    .item-seller {
+
+    .market-item .item-seller {
         font-size: 0.9rem;
-        color: gray;
+        color: black;
         margin: 0;
+    }
+
+    .market-item .market-item-category {
+        color: gray;
+    }
+
+    .market-item .market-tag-chip {
+        display: none;
     }
 }
 
@@ -144,7 +152,7 @@
         object-fit: fill;
     }
     
-    .item-info {
+    .market-item .item-info {
         flex: 1;
         display: flex;
         flex-direction: column;
@@ -152,24 +160,32 @@
         margin-left: 10px;
     }
     
-    .item-name {
-        font-size: 1.2rem;
+    .market-item .item-name {
+        font-size: 1.7rem;
         font-weight: 600;
         margin: 0 0 10px 0;
         color: black;
     }
     
-    .item-price {
-        font-size: 1.1rem;
+    .market-item .item-price {
+        font-size: 1.7rem;
         font-weight: bold;
         color: black;
         margin: 0 0 8px 0;
     }
-    
-    .item-seller {
-        font-size: 1rem;
-        color: gray;
+
+    .market-item .item-seller {
+        font-size: 1.2rem;
+        color: black;
         margin: 0;
+    }
+
+    .market-item .market-item-category {
+        color: gray;
+    }
+
+    .market-item .market-tag-chip {
+        color: gray;
     }
 }
 

@@ -49,6 +49,13 @@ function Market({ items = [], loading, errorMsg }) {
               <div className="item-price">
                 {item.price != null ? `${item.price}₩` : ""}
               </div>
+              <div className="item-seller">
+                Seller:{" "}
+                {item.seller_display_name ||
+                  item.seller?.display_name ||
+                  item.seller_name ||
+                  "Unknown seller"}
+              </div>
               <div className="market-item-meta">
                 <span className="market-item-category">
                   {item.category || "etc"}
@@ -62,13 +69,6 @@ function Market({ items = [], loading, errorMsg }) {
                     ))}
                   </div>
                 )}
-              </div>
-              <div className="item-seller">
-                Seller:{" "}
-                {item.seller_display_name ||
-                  item.seller?.display_name ||
-                  item.seller_name ||
-                  "Unknown seller"}
               </div>
             </div>
           </div>
