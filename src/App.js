@@ -36,6 +36,7 @@ import AdminItems from './Main_Page/Admin_Page/AdminItems.js'
 import AdminPosts from './Main_Page/Admin_Page/AdminPosts.js'
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -50,32 +51,32 @@ function App() {
         <Route path='/auth/callback' element={<AuthCallback />} />
 
         {/* -------- Main Home -------- */}
-        <Route path='/home' element={<MainContent />} />
+        <Route path='/home' element={<ProtectedRoute><MainContent /></ProtectedRoute>} />
 
         {/* -------- Community Pages -------- */}
-        <Route path='/community' element={<Community />} />
-        <Route path='/community/create' element={<CommunityCreate />} />
-        <Route path='/community/post/:id' element={<Post />} />
-        <Route path='/community/post/create' element={<PostCreate />} />
+        <Route path='/community' element={<ProtectedRoute><Community /></ProtectedRoute>} />
+        <Route path='/community/create' element={<ProtectedRoute><CommunityCreate /></ProtectedRoute>} />
+        <Route path='/community/post/:id' element={<ProtectedRoute><Post /></ProtectedRoute>} />
+        <Route path='/community/post/create' element={<ProtectedRoute><PostCreate /></ProtectedRoute>} />
 
         {/* -------- Market / Item Pages -------- */}
-        <Route path='/item' element={<Item />} />                  {/* 상품 목록 */}
-        <Route path='/item-post' element={<ItemPost />} />         {/* 상품 등록 */}
-        <Route path='/item/:id' element={<ItemDetail />} />        {/* 상품 상세 + 추천 */}
+        <Route path='/item' element={<ProtectedRoute><Item /></ProtectedRoute>} />                  {/* 상품 목록 */}
+        <Route path='/item-post' element={<ProtectedRoute><ItemPost /></ProtectedRoute>} />         {/* 상품 등록 */}
+        <Route path='/item/:id' element={<ProtectedRoute><ItemDetail /></ProtectedRoute>} />        {/* 상품 상세 + 추천 */}
 
         {/* -------- Other Features -------- */}
-        <Route path='/chat' element={<Chat />} />
-        <Route path='/search' element={<Search />} />
-        <Route path='/search-result' element={<SearchResult />} />
-        <Route path='/profile' element={<Profile />} />
-        <Route path='/profileEdit' element={<ProfileEdit />} />
-        <Route path='/option/:mode' element={<OptionPage />} />
+        <Route path='/chat' element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+        <Route path='/search' element={<ProtectedRoute><Search /></ProtectedRoute>} />
+        <Route path='/search-result' element={<ProtectedRoute><SearchResult /></ProtectedRoute>} />
+        <Route path='/profile' element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path='/profileEdit' element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
+        <Route path='/option/:mode' element={<ProtectedRoute><OptionPage /></ProtectedRoute>} />
 
         {/* -------- Admin Pages -------- */}
-        <Route path='/admin' element={<Admin />} />
-        <Route path='/admin/users' element={<AdminUsers />} />
-        <Route path='/admin/items' element={<AdminItems />} />
-        <Route path='/admin/posts' element={<AdminPosts />} />
+        <Route path='/admin' element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+        <Route path='/admin/users' element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
+        <Route path='/admin/items' element={<ProtectedRoute><AdminItems /></ProtectedRoute>} />
+        <Route path='/admin/posts' element={<ProtectedRoute><AdminPosts /></ProtectedRoute>} />
 
       </Routes>
     </BrowserRouter>

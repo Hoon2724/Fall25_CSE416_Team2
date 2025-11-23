@@ -43,12 +43,31 @@ function AuthCallback() {
                         
                         // Clean the URL to avoid re-exchange loops
                         window.history.replaceState({}, '', '/auth/callback');
+                        
+                        // Verify session was created after code exchange
+                        const { data: newSessData, error: newSessError } = await supabase.auth.getSession();
+                        if (newSessError || !newSessData?.session) {
+                            console.error('❌ [AuthCallback] Session not available after code exchange');
+                            setMessage('Session creation failed. Redirecting to sign in...');
+                            setTimeout(() => window.location.replace('/signIn'), 3000);
+                            return;
+                        }
+                        console.log('✅ [AuthCallback] Session verified after code exchange');
                     } catch (ex) {
                         console.error('❌ [AuthCallback] Code exchange exception:', ex);
                         setMessage(`Exchange exception: ${ex.message}. Check console.`);
                         setTimeout(() => window.location.replace('/signIn'), 5000);
                         return;
                     }
+                }
+
+                // Final session check before proceeding
+                const { data: finalSessData, error: finalSessError } = await supabase.auth.getSession();
+                if (finalSessError || !finalSessData?.session) {
+                    console.error('❌ [AuthCallback] No valid session available');
+                    setMessage('No valid session. Redirecting to sign in...');
+                    setTimeout(() => window.location.replace('/signIn'), 3000);
+                    return;
                 }
 
                 console.log('🔵 [AuthCallback] Getting current user...');
@@ -118,15 +137,26 @@ function AuthCallback() {
                         throw insertError;
                     }
                     console.log('✅ [AuthCallback] Profile created successfully');
+                    
+                    // Verify profile was created by calling getCurrentUser again
+                    const verifyResult = await getCurrentUser();
+                    if (verifyResult && verifyResult.res_code === 200) {
+                        console.log('✅ [AuthCallback] Profile verified, redirecting to home');
+                        setMessage('Account created! Redirecting to home...');
+                        setTimeout(() => window.location.replace('/home'), 2000);
+                        return;
+                    } else {
+                        console.warn('⚠️ [AuthCallback] Profile created but verification failed, redirecting anyway');
+                    }
                 }
 
                 console.log('✅ [AuthCallback] Success! Redirecting to home...');
-                setMessage('Account created! Redirecting to home...');
+                setMessage('Sign-in complete! Redirecting to home...');
                 setTimeout(() => window.location.replace('/home'), 2000);
             } catch (e) {
                 console.error('❌ [AuthCallback] Exception caught:', e);
                 setMessage(`Error: ${e.message}. Check console for details.`);
-                setTimeout(() => window.location.replace('/signUp'), 5000);
+                setTimeout(() => window.location.replace('/signIn'), 5000);
             }
         };
         finalizeLogin();

@@ -95,7 +95,7 @@ export const getNotifications = async (filters = {}) => {
         payload: n.payload || {},
         title: n.payload?.title || (n.type === 'comment' ? 'New comment' : n.type === 'item_chat' || n.type === 'post_chat' ? 'New chat' : 'Announcement'),
         content: n.payload?.content || '',
-        is_read: Boolean(n.read_at),
+        is_read: n.read_at !== null,
         created_at: n.created_at
       }));
 

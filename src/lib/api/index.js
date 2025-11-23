@@ -1,9 +1,6 @@
 
 export { 
-  signUp,
-  signIn,
   signInWithGoogle,
-  validateEmailDomain,
   signOut
 } from './auth';
 
