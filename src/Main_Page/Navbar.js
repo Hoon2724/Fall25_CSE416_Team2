@@ -230,7 +230,7 @@ function Navbar() {
                         <Link className='nav-link' to='/chat'>Chat</Link>
                     </li>
                 </ul>
-                <ul className="navbar-nav ms-auto align-items-center iconCtn">
+                <ul className="navbar-nav ms-auto iconCtn">
                     <li className="nav-item adminIcon">
                         <Link className='nav-link' to='/admin'><span className="bi bi-file-earmark-person"></span></Link>
                     </li>
