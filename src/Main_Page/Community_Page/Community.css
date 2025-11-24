@@ -6,7 +6,6 @@
   background: #efefef;
 }
 
-
 .community-topbar {
   grid-column: 1 / span 2;
   display: flex;
@@ -70,6 +69,7 @@
   text-align: left;
   cursor: pointer;
   font-weight: bold;
+  overflow-wrap: break-word;
 }
 .sidebar-btn.active {
   background: #999;
@@ -109,7 +109,7 @@
     font-weight: 600;
     border-radius: 8px;
 }
-.post-card {
+.communityPost {
   background: #e0e0e0;
   display: flex;
   justify-content: space-between;
@@ -120,26 +120,39 @@
   cursor: pointer;
   transition: 0.2s;
 }
-.post-card:hover {
+.communityPost:hover {
   background: #d0d0d0;
 }
-.post-title {
+.commPostTitle {
   font-weight: bold;
   font-size: 18px;
   margin-bottom: 4px;
 }
-.post-preview {
+.commPostPreview {
   color: #333;
 }
-.post-meta {
+.commPostMeta {
   text-align: right;
   font-size: 13px;
   color: #333;
 }
-.post-img {
+.commPostImg {
   width: 60px;
   height: 60px;
   object-fit: cover;
   border-radius: 4px;
   margin-bottom: 6px;
+}
+
+@media (max-width: 768px) {
+  .community-container {
+    grid-template-columns: 120px 1fr;
+  }
+
+  .commPostTitle {
+    font-size: 15px;
+  }
+  .commPostPreview, .commPostMeta {
+    font-size: 12px;
+  }
 }

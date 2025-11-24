@@ -115,18 +115,18 @@ function Community() {
           )}
           {!loadingPosts && !error && posts.map((p) => (
             <div
-              className="post-card"
+              className="communityPost"
               key={p.id}
               onClick={() => navigate(`/community/post/${p.id}`)}
             >
               <div>
-                <div className="post-title">{p.title}</div>
-                <div className="post-preview">{renderPostPreview(p.content)}</div>
+                <div className="commPostTitle">{p.title}</div>
+                <div className="commPostPreview">{renderPostPreview(p.content)}</div>
               </div>
 
-              <div className="post-meta">
+              <div className="commPostMeta">
                 {p.media && p.media.length > 0 && p.media[0].media_type === 'image' && (
-                  <img src={p.media[0].media_url} alt="thumb" className="post-img" />
+                  <img src={p.media[0].media_url} alt="thumb" className="commPostImg" />
                 )}
                 <div>
                   {(p.community && p.community.name) || 'Community'} · {(p.author && p.author.display_name) || 'Unknown'}

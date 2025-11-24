@@ -40,6 +40,7 @@
   font-weight:600; 
   border:none; 
   text-align:left; 
+  overflow-wrap: break-word;
 }
 
 .post-pill.active { 
@@ -246,4 +247,21 @@
   text-align:right; 
   font-size:12px; 
   color:#333; 
+}
+
+@media (max-width: 768px) {
+  .post-grid {
+    grid-template-columns: 120px 1fr;
+  }
+  
+  .post-title {
+    font-size: 20px;
+  }
+  .post-author {
+    font-size: 12px;
+  }
+  .post-meta-right {
+    font-size: 12px;
+    min-width: 100px;
+  }
 }
