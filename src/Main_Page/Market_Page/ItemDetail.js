@@ -15,6 +15,7 @@ function ItemDetail() {
   const [contacting, setContacting] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const navigate = useNavigate(); // ✅ 페이지 이동용
 
   useEffect(() => {
@@ -42,6 +43,7 @@ function ItemDetail() {
         setItem({
           ...baseItem,
           image_url: baseItem.image_url || baseItem.images?.[0]?.url || null,
+          images: baseItem.images || [],
           tags: baseItem.tags || tagsList,
           seller_id: baseItem.seller_id || baseItem.seller?.id || null,
           seller_display_name:
@@ -53,6 +55,9 @@ function ItemDetail() {
             baseItem.seller?.trust_score ??
             null,
         });
+        
+        // Reset selected image index when item changes
+        setSelectedImageIndex(0);
 
         // 3️⃣ 최근 본 상품 로컬 저장소에 기록
         try {
@@ -202,11 +207,41 @@ function ItemDetail() {
           {/* ✅ 상품 상세 */}
           <div className="item-main">
             <h2 className="item-title">{item.title}</h2>
-            <img
-              src={item.image_url || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="100%" height="100%" fill="%23cccccc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="20" fill="%23666666" style="font-family:system-ui%2C%20-apple-system%2C%20Segoe%20UI%2C%20Roboto%2C%20Noto%20Sans%2C%20Helvetica%20Neue%2C%20Arial%2C%20sans-serif;">No Image</text></svg>'}
-              alt={item.title}
-              className="item-main-image"
-            />
+            {/* Image Gallery */}
+            <div className="item-image-section">
+              {item.images && item.images.length > 0 ? (
+                <>
+                  {/* Main Image */}
+                  <div className="item-main-image-container">
+                    <img
+                      src={item.images[selectedImageIndex]?.url || item.images[0]?.url}
+                      alt={item.title}
+                      className="item-main-image"
+                    />
+                  </div>
+                  {/* Thumbnail Gallery */}
+                  {item.images.length > 1 && (
+                    <div className="item-image-thumbnails">
+                      {item.images.map((img, index) => (
+                        <img
+                          key={index}
+                          src={img.url}
+                          alt={`${item.title} - Image ${index + 1}`}
+                          className={`item-thumbnail ${selectedImageIndex === index ? 'active' : ''}`}
+                          onClick={() => setSelectedImageIndex(index)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <img
+                  src={item.image_url || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="100%" height="100%" fill="%23cccccc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="20" fill="%23666666" style="font-family:system-ui%2C%20-apple-system%2C%20Segoe%20UI%2C%20Roboto%2C%20Noto%20Sans%2C%20Helvetica%20Neue%2C%20Arial%2C%20sans-serif;">No Image</text></svg>'}
+                  alt={item.title}
+                  className="item-main-image"
+                />
+              )}
+            </div>
             <p className="item-desc">{item.description}</p>
             <p><b>Category:</b> {item.category || "N/A"}</p>
             <p><b>Price:</b> {item.price ? `${item.price}₩` : "N/A"}</p>
