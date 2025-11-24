@@ -53,3 +53,13 @@
     font-size: 30px;
     margin: 0px 10px 10px 10px;
 }
+
+@media (max-width: 768px) {
+    .signInLogoCtn {
+        min-height: 10vh;
+    }
+    .signInMainLogo {
+        width: 350px;
+        height: 350px;
+    }
+}

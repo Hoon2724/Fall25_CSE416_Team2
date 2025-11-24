@@ -63,3 +63,13 @@
     color: rgb(255, 96, 96);
     font-weight: bold;
 }
+
+@media (max-width: 768px) {
+    .welcomeLogoCtn {
+        min-height: 10vh;
+    }
+    .welcomeMainLogo {
+        width: 350px;
+        height: 350px;
+    }
+}
