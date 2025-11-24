@@ -63,7 +63,11 @@ export const voteOnPost = async (postId, voteData) => {
       .select('id, vote_type')
       .eq('post_id', postId)
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      throw checkError;
+    }
 
     let voteResult;
 
@@ -155,7 +159,11 @@ export const getPostVotes = async (postId) => {
       .select('vote_type')
       .eq('post_id', postId)
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
+
+    if (voteError && voteError.code !== 'PGRST116') {
+      throw voteError;
+    }
 
     return {
       res_code: 200,
@@ -192,7 +200,11 @@ export const getUserVote = async (postId) => {
       .select('vote_type')
       .eq('post_id', postId)
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
+
+    if (voteError && voteError.code !== 'PGRST116') {
+      throw voteError;
+    }
 
     return {
       res_code: 200,

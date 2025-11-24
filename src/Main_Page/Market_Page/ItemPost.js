@@ -173,11 +173,16 @@ function ItemPost() {
       if (!title.trim()) throw new Error("Title is required.");
       if (!currentUserId) throw new Error("Please sign in to post an item.");
 
-      // price: only integer allowed; empty -> null
-      const cleanPrice =
-        price !== "" && price != null
-          ? parseInt(String(price).replace(/\D/g, ""), 10)
-          : null;
+      // price: required field
+      if (!price || price.trim() === "") {
+        throw new Error("Please enter a price.");
+      }
+
+      // price: only integer allowed
+      const cleanPrice = parseInt(String(price).replace(/\D/g, ""), 10);
+      if (isNaN(cleanPrice) || cleanPrice < 0) {
+        throw new Error("Please enter a valid price (0 or greater).");
+      }
 
       const { data: itemRow, error: itemErr } = await supabase
         .from("items")

@@ -26,6 +26,7 @@ export {
   createItem,
   updateItem,
   deleteItem,
+  deleteItemImage,
   getItemReviews
 } from './items';
 

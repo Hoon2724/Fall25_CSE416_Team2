@@ -17,7 +17,11 @@ export const addToWishlist = async (itemId) => {
       .select('id')
       .eq('user_id', user.id)
       .eq('item_id', itemId)
-      .single();
+      .maybeSingle();
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      throw checkError;
+    }
 
     if (existingWishlist) {
       return {
@@ -161,7 +165,11 @@ export const isItemInWishlist = async (itemId) => {
       .select('id')
       .eq('user_id', user.id)
       .eq('item_id', itemId)
-      .single();
+      .maybeSingle();
+
+    if (wishlistError && wishlistError.code !== 'PGRST116') {
+      throw wishlistError;
+    }
 
     return {
       res_code: 200,

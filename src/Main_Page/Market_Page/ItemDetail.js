@@ -3,10 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
 import Navbar from "../Navbar";
 import "./ItemDetail.css";
-import { createChatRoomFromItem, getItemDetails, recordItemView, addToWishlist, removeFromWishlist, isItemInWishlist } from "../../lib/api";
+import { createChatRoomFromItem, getItemDetails, recordItemView, addToWishlist, removeFromWishlist, isItemInWishlist, updateItem, deleteItem, deleteItemImage } from "../../lib/api";
 
 function ItemDetail() {
-  const { id } = useParams(); // URL에서 아이템 ID 가져오기
+  const { id } = useParams(); // Get item ID from URL
   const [item, setItem] = useState(null);
   const [similar, setSimilar] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,7 +16,14 @@ function ItemDetail() {
   const [favLoading, setFavLoading] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const navigate = useNavigate(); // ✅ 페이지 이동용
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editPrice, setEditPrice] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const navigate = useNavigate(); // For page navigation
 
   useEffect(() => {
     async function fetchItemAndSimilar() {
@@ -24,7 +31,7 @@ function ItemDetail() {
         setLoading(true);
         setErrorMsg("");
 
-        // 1️⃣ 아이템 기본 정보 가져오기
+        // Get item basic information
         const itemRes = await getItemDetails(id);
         if (itemRes.res_code !== 200 || !itemRes.item) {
           throw new Error(itemRes.res_msg || "Failed to load item");
@@ -59,7 +66,7 @@ function ItemDetail() {
         // Reset selected image index when item changes
         setSelectedImageIndex(0);
 
-        // 3️⃣ 최근 본 상품 로컬 저장소에 기록
+        // Record recently viewed items in localStorage
         try {
           const viewed = {
             id: baseItem.id,
@@ -70,16 +77,16 @@ function ItemDetail() {
           const key = 'recent_items';
           const raw = localStorage.getItem(key);
           const list = Array.isArray(JSON.parse(raw || '[]')) ? JSON.parse(raw || '[]') : [];
-          // 중복 제거: 동일 id 제거 후 맨 앞에 추가
+          // Remove duplicates: remove same id then add to front
           const filtered = list.filter((x) => x && x.id !== viewed.id);
-          const next = [viewed, ...filtered].slice(0, 12); // 최대 12개 보관
+          const next = [viewed, ...filtered].slice(0, 12); // Keep maximum 12 items
           localStorage.setItem(key, JSON.stringify(next));
         } catch (e) {
           // ignore localStorage errors
           console.warn('failed to update recent_items', e);
         }
 
-        // 4️⃣ 로그인 유저라면 서버에도 기록(무시 가능)
+        // Record on server if logged in user (can be ignored)
         try {
           await recordItemView(baseItem.id);
         } catch (e) {
@@ -87,7 +94,7 @@ function ItemDetail() {
           console.warn('failed to record item view on server', e);
         }
 
-        // 2️⃣ 유사 상품 추천 (RPC 호출)
+        // Similar items recommendation (RPC call)
         const { data: simData, error: simErr } = await supabase.rpc(
           "search_similar_to_item_by_id",
           { self_id: id, k: 6 }
@@ -107,9 +114,34 @@ function ItemDetail() {
 
   useEffect(() => {
     const loadCurrentUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (!error) {
-        setCurrentUserId(data?.user?.id || null);
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (!error && data?.user) {
+          const userId = data.user.id;
+          setCurrentUserId(userId);
+          // Check if user is admin
+          const { data: userProfile, error: profileError } = await supabase
+            .from('users')
+            .select('is_admin')
+            .eq('id', userId)
+            .single();
+          
+          if (profileError) {
+            console.error('[ItemDetail] Failed to load user profile', profileError);
+            setIsAdmin(false);
+          } else {
+            const adminStatus = !!userProfile?.is_admin;
+            console.log('[ItemDetail] Admin check:', { userId, isAdmin: adminStatus, userProfile });
+            setIsAdmin(adminStatus);
+          }
+        } else {
+          setCurrentUserId(null);
+          setIsAdmin(false);
+        }
+      } catch (e) {
+        console.error('[ItemDetail] Failed to load current user', e);
+        setCurrentUserId(null);
+        setIsAdmin(false);
       }
     };
     loadCurrentUser();
@@ -198,53 +230,570 @@ function ItemDetail() {
     }
   };
 
+  const startEditing = () => {
+    if (!item) return;
+    setEditTitle(item.title || '');
+    setEditDescription(item.description || '');
+    setEditPrice(item.price ? String(item.price) : '');
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    if (!item) return;
+    setEditTitle(item.title || '');
+    setEditDescription(item.description || '');
+    setEditPrice(item.price ? String(item.price) : '');
+    setIsEditing(false);
+  };
+
+  const saveEdit = async () => {
+    if (!item || savingEdit) return;
+    const trimmedTitle = editTitle.trim();
+    const trimmedDescription = editDescription.trim();
+    const priceStr = editPrice.trim();
+    const priceNum = priceStr ? parseFloat(priceStr) : null;
+    
+    if (!trimmedTitle) {
+      alert('Title is required.');
+      return;
+    }
+    
+    if (priceStr && (isNaN(priceNum) || priceNum < 0)) {
+      alert('Please enter a valid price (0 or greater).');
+      return;
+    }
+    
+    setSavingEdit(true);
+    try {
+      const updateData = {
+        title: trimmedTitle,
+        description: trimmedDescription
+      };
+      
+      // Only include price if it's provided
+      if (priceStr) {
+        updateData.price = priceNum;
+      } else {
+        updateData.price = null;
+      }
+      
+      const res = await updateItem(item.id, updateData);
+      if (res.res_code === 200 && res.item) {
+        // Reload item data from server to ensure consistency
+        const itemRes = await getItemDetails(item.id);
+        if (itemRes.res_code === 200 && itemRes.item) {
+          const baseItem = itemRes.item;
+          
+          // Get tags
+          const { data: tagData } = await supabase
+            .from("item_tags")
+            .select("tag")
+            .eq("item_id", item.id);
+          const tagsList = tagData?.map((row) => row.tag) || [];
+          
+          setItem({
+            ...baseItem,
+            image_url: baseItem.image_url || baseItem.images?.[0]?.url || null,
+            images: baseItem.images || [],
+            tags: baseItem.tags || tagsList,
+            seller_id: baseItem.seller_id || baseItem.seller?.id || null,
+            seller_display_name:
+              baseItem.seller_display_name ||
+              baseItem.seller?.display_name ||
+              null,
+            seller_trust_score:
+              baseItem.seller_trust_score ??
+              baseItem.seller?.trust_score ??
+              null,
+          });
+        } else {
+          // Fallback: update local state if reload fails
+          setItem((prev) => prev ? { 
+            ...prev, 
+            title: res.item.title, 
+            description: res.item.description,
+            price: res.item.price
+          } : prev);
+        }
+        setIsEditing(false);
+      } else {
+        alert(res.res_msg || 'Failed to update item');
+      }
+    } catch (e) {
+      alert(e.message || 'Failed to update item');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!item) return;
+    const confirmed = window.confirm('Delete this item? This action cannot be undone.');
+    if (!confirmed) return;
+    try {
+      const res = await deleteItem(item.id);
+      if (res.res_code === 200) {
+        alert('Item deleted.');
+        navigate('/item', { replace: true });
+      } else {
+        alert(res.res_msg || 'Failed to delete item');
+      }
+    } catch (e) {
+      alert(e.message || 'Failed to delete item');
+    }
+  };
+
+  // Helper function to convert jfif to jpeg
+  const toJpegBlob = async (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob(resolve, "image/jpeg", 0.9);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Helper function to make safe file name
+  const makeSafeFileName = (name) => {
+    return name.replace(/[^a-zA-Z0-9.-]/g, "_");
+  };
+
+  // Upload image to Supabase Storage
+  const uploadAndGetPublicUrl = async (file) => {
+    const userId = currentUserId || "guest";
+    const safeName = makeSafeFileName(file.name);
+    const path = `user-${userId}/${Date.now()}-${safeName}`;
+
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    let contentType = file.type || "application/octet-stream";
+    if (ext === "jfif" || contentType === "" || contentType === "image/pjpeg") {
+      contentType = "image/jpeg";
+    }
+
+    const { data, error } = await supabase.storage
+      .from("items")
+      .upload(path, file, { upsert: true, contentType });
+
+    if (error) {
+      console.error("[upload error]", error);
+      throw new Error(error.message || "Upload failed");
+    }
+
+    const { data: pub } = supabase.storage.from("items").getPublicUrl(data.path);
+    console.log("[upload ok]", pub?.publicUrl);
+    return pub?.publicUrl;
+  };
+
+  // Handle image file selection and upload
+  const handleAddImage = async (e) => {
+    if (!item || !isEditing || uploadingImage) return;
+    
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    // Check max images (10 total)
+    const currentImageCount = item.images?.length || 0;
+    if (currentImageCount + files.length > 10) {
+      alert("You can only have up to 10 images total.");
+      e.target.value = "";
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const uploadedUrls = [];
+      
+      for (let file of files) {
+        const ext = file.name.split(".").pop()?.toLowerCase();
+        if (ext === "jfif" || file.type === "" || file.type === "image/pjpeg") {
+          file = await toJpegBlob(file);
+        }
+        const url = await uploadAndGetPublicUrl(file);
+        uploadedUrls.push(url);
+      }
+
+      // Insert images into item_images table
+      const imageData = uploadedUrls.map((url, index) => ({
+        item_id: item.id,
+        url: url,
+        sort_order: (item.images?.length || 0) + index
+      }));
+
+      const { data: insertedImages, error: insertError } = await supabase
+        .from('item_images')
+        .insert(imageData)
+        .select('id, url');
+
+      if (insertError) {
+        console.error('[ItemDetail] Error inserting images:', insertError);
+        throw insertError;
+      }
+
+      // Reload item data to get updated images
+      const itemRes = await getItemDetails(item.id);
+      if (itemRes.res_code === 200 && itemRes.item) {
+        const baseItem = itemRes.item;
+        
+        // Get tags
+        const { data: tagData } = await supabase
+          .from("item_tags")
+          .select("tag")
+          .eq("item_id", item.id);
+        const tagsList = tagData?.map((row) => row.tag) || [];
+        
+        setItem({
+          ...baseItem,
+          image_url: baseItem.image_url || baseItem.images?.[0]?.url || null,
+          images: baseItem.images || [],
+          tags: baseItem.tags || tagsList,
+          seller_id: baseItem.seller_id || baseItem.seller?.id || null,
+          seller_display_name:
+            baseItem.seller_display_name ||
+            baseItem.seller?.display_name ||
+            null,
+          seller_trust_score:
+            baseItem.seller_trust_score ??
+            baseItem.seller?.trust_score ??
+            null,
+        });
+      }
+    } catch (err) {
+      console.error('[ItemDetail] Error adding image:', err);
+      alert(err.message || 'Failed to add image');
+    } finally {
+      setUploadingImage(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleDeleteImage = async (imageId, imageIndex) => {
+    if (!item || !isEditing) return;
+    
+    const confirmed = window.confirm('Delete this image? This action cannot be undone.');
+    if (!confirmed) return;
+
+    console.log('[ItemDetail] handleDeleteImage called:', { imageId, imageIndex, itemId: item.id });
+
+    try {
+      const res = await deleteItemImage(imageId);
+      console.log('[ItemDetail] deleteItemImage response:', res);
+      
+      if (res.res_code === 200) {
+        // Reload item data from server to ensure consistency
+        console.log('[ItemDetail] Reloading item data...');
+        const itemRes = await getItemDetails(item.id);
+        console.log('[ItemDetail] getItemDetails response:', itemRes);
+        
+        if (itemRes.res_code === 200 && itemRes.item) {
+          const baseItem = itemRes.item;
+          
+          // Get tags
+          const { data: tagData } = await supabase
+            .from("item_tags")
+            .select("tag")
+            .eq("item_id", item.id);
+          const tagsList = tagData?.map((row) => row.tag) || [];
+          
+          console.log('[ItemDetail] Updated images count:', baseItem.images?.length);
+          
+          setItem({
+            ...baseItem,
+            image_url: baseItem.image_url || baseItem.images?.[0]?.url || null,
+            images: baseItem.images || [],
+            tags: baseItem.tags || tagsList,
+            seller_id: baseItem.seller_id || baseItem.seller?.id || null,
+            seller_display_name:
+              baseItem.seller_display_name ||
+              baseItem.seller?.display_name ||
+              null,
+            seller_trust_score:
+              baseItem.seller_trust_score ??
+              baseItem.seller?.trust_score ??
+              null,
+          });
+          
+          // Adjust selected image index if needed
+          const newImagesLength = baseItem.images?.length || 0;
+          if (selectedImageIndex >= newImagesLength && newImagesLength > 0) {
+            setSelectedImageIndex(newImagesLength - 1);
+          } else if (newImagesLength === 0) {
+            setSelectedImageIndex(0);
+          }
+        } else {
+          console.error('[ItemDetail] Failed to reload item data:', itemRes);
+          alert('Image deleted but failed to reload. Please refresh the page.');
+        }
+      } else {
+        console.error('[ItemDetail] Delete failed:', res);
+        alert(res.res_msg || 'Failed to delete image');
+      }
+    } catch (e) {
+      console.error('[ItemDetail] Exception in handleDeleteImage:', e);
+      alert(e.message || 'Failed to delete image');
+    }
+  };
+
   return (
     <div className="item-detail-wrapper">
       <Navbar />
       <div className="item-detail-container">
         <div className="item-detail-content">
 
-          {/* ✅ 상품 상세 */}
+          {/* Item Details */}
           <div className="item-main">
-            <h2 className="item-title">{item.title}</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <h2 className="item-title">{item.title}</h2>
+              {(item?.seller_id && currentUserId && String(item.seller_id) === String(currentUserId)) || isAdmin ? (
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button 
+                    className="item-edit-btn" 
+                    onClick={startEditing}
+                    style={{ 
+                      padding: '8px 16px', 
+                      backgroundColor: '#007bff', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '5px', 
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    className="item-delete-btn" 
+                    onClick={handleDelete}
+                    style={{ 
+                      padding: '8px 16px', 
+                      backgroundColor: '#dc3545', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '5px', 
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              ) : null}
+            </div>
             {/* Image Gallery */}
             <div className="item-image-section">
               {item.images && item.images.length > 0 ? (
                 <>
                   {/* Main Image */}
-                  <div className="item-main-image-container">
+                  <div className="item-main-image-container" style={{ position: 'relative' }}>
                     <img
                       src={item.images[selectedImageIndex]?.url || item.images[0]?.url}
                       alt={item.title}
                       className="item-main-image"
+                      onClick={() => {
+                        if (isEditing && item.images[selectedImageIndex]?.id) {
+                          handleDeleteImage(item.images[selectedImageIndex].id, selectedImageIndex);
+                        }
+                      }}
+                      style={{
+                        cursor: isEditing && item.images[selectedImageIndex]?.id ? 'pointer' : 'default'
+                      }}
                     />
+                    {isEditing && item.images && item.images.length > 0 && item.images[selectedImageIndex]?.id && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (item.images[selectedImageIndex]?.id) {
+                            handleDeleteImage(item.images[selectedImageIndex].id, selectedImageIndex);
+                          }
+                        }}
+                        style={{
+                          position: 'absolute',
+                          top: '10px',
+                          right: '10px',
+                          padding: '8px 12px',
+                          backgroundColor: 'rgba(220, 53, 69, 0.9)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '5px',
+                          fontSize: '14px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          zIndex: 10
+                        }}
+                      >
+                        Click to Delete
+                      </button>
+                    )}
                   </div>
                   {/* Thumbnail Gallery */}
-                  {item.images.length > 1 && (
-                    <div className="item-image-thumbnails">
-                      {item.images.map((img, index) => (
-                        <img
-                          key={index}
-                          src={img.url}
-                          alt={`${item.title} - Image ${index + 1}`}
-                          className={`item-thumbnail ${selectedImageIndex === index ? 'active' : ''}`}
-                          onClick={() => setSelectedImageIndex(index)}
+                  <div className="item-image-thumbnails">
+                    {item.images.map((img, index) => (
+                      <img
+                        key={img.id || index}
+                        src={img.url}
+                        alt={`${item.title} - Image ${index + 1}`}
+                        className={`item-thumbnail ${selectedImageIndex === index ? 'active' : ''}`}
+                        onClick={() => {
+                          if (!isEditing) {
+                            setSelectedImageIndex(index);
+                          }
+                        }}
+                        style={{
+                          cursor: isEditing ? 'default' : 'pointer'
+                        }}
+                      />
+                    ))}
+                    {isEditing && (
+                      <label
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '80px',
+                          height: '80px',
+                          border: '2px dashed #ddd',
+                          borderRadius: '8px',
+                          cursor: uploadingImage ? 'not-allowed' : 'pointer',
+                          backgroundColor: uploadingImage ? '#f5f5f5' : '#f5f5f5',
+                          color: '#666',
+                          fontSize: '12px',
+                          textAlign: 'center',
+                          opacity: uploadingImage ? 0.6 : 1,
+                          flexShrink: 0
+                        }}
+                      >
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleAddImage}
+                          disabled={uploadingImage}
+                          style={{ display: 'none' }}
                         />
-                      ))}
+                        {uploadingImage ? 'Uploading...' : '+ Add Image'}
+                      </label>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <img
+                    src={item.image_url || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="100%" height="100%" fill="%23cccccc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="20" fill="%23666666" style="font-family:system-ui%2C%20-apple-system%2C%20Segoe%20UI%2C%20Roboto%2C%20Noto%20Sans%2C%20Helvetica%20Neue%2C%20Arial%2C%20sans-serif;">No Image</text></svg>'}
+                    alt={item.title}
+                    className="item-main-image"
+                  />
+                  {isEditing && (
+                    <div className="item-image-thumbnails">
+                      <label
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '80px',
+                          height: '80px',
+                          border: '2px dashed #ddd',
+                          borderRadius: '8px',
+                          cursor: uploadingImage ? 'not-allowed' : 'pointer',
+                          backgroundColor: uploadingImage ? '#f5f5f5' : '#f5f5f5',
+                          color: '#666',
+                          fontSize: '12px',
+                          textAlign: 'center',
+                          opacity: uploadingImage ? 0.6 : 1,
+                          flexShrink: 0
+                        }}
+                      >
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleAddImage}
+                          disabled={uploadingImage}
+                          style={{ display: 'none' }}
+                        />
+                        {uploadingImage ? 'Uploading...' : '+ Add Image'}
+                      </label>
                     </div>
                   )}
                 </>
-              ) : (
-                <img
-                  src={item.image_url || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="100%" height="100%" fill="%23cccccc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="20" fill="%23666666" style="font-family:system-ui%2C%20-apple-system%2C%20Segoe%20UI%2C%20Roboto%2C%20Noto%20Sans%2C%20Helvetica%20Neue%2C%20Arial%2C%20sans-serif;">No Image</text></svg>'}
-                  alt={item.title}
-                  className="item-main-image"
-                />
               )}
             </div>
-            <p className="item-desc">{item.description}</p>
-            <p><b>Category:</b> {item.category || "N/A"}</p>
-            <p><b>Price:</b> {item.price ? `${item.price}₩` : "N/A"}</p>
+            {isEditing ? (
+              <div className="item-edit-form" style={{ marginTop: '20px', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
+                <input
+                  className="item-edit-input"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="Title"
+                  maxLength={200}
+                  style={{ width: '100%', padding: '10px', marginBottom: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px' }}
+                />
+                <textarea
+                  className="item-edit-textarea"
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  placeholder="Description"
+                  rows={6}
+                  style={{ width: '100%', padding: '10px', marginBottom: '10px', fontSize: '14px', border: '1px solid #ccc', borderRadius: '4px', resize: 'vertical' }}
+                />
+                <input
+                  type="number"
+                  className="item-edit-price"
+                  value={editPrice}
+                  onChange={(e) => setEditPrice(e.target.value)}
+                  placeholder="Price"
+                  min="0"
+                  step="1"
+                  style={{ width: '100%', padding: '10px', marginBottom: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px' }}
+                />
+                <div className="item-edit-actions" style={{ display: 'flex', gap: '10px' }}>
+                  <button 
+                    className="item-save-btn" 
+                    onClick={saveEdit} 
+                    disabled={savingEdit}
+                    style={{ 
+                      padding: '10px 20px', 
+                      backgroundColor: '#28a745', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '5px', 
+                      cursor: savingEdit ? 'not-allowed' : 'pointer',
+                      opacity: savingEdit ? 0.6 : 1
+                    }}
+                  >
+                    {savingEdit ? 'Saving...' : 'Save'}
+                  </button>
+                  <button 
+                    className="item-cancel-btn" 
+                    onClick={cancelEditing} 
+                    disabled={savingEdit}
+                    style={{ 
+                      padding: '10px 20px', 
+                      backgroundColor: '#6c757d', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '5px', 
+                      cursor: savingEdit ? 'not-allowed' : 'pointer',
+                      opacity: savingEdit ? 0.6 : 1
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="item-desc">{item.description}</p>
+                <p><b>Category:</b> {item.category || "N/A"}</p>
+                <p><b>Price:</b> {item.price ? `${item.price}₩` : "N/A"}</p>
+              </>
+            )}
             <p>
               <b>Seller:</b>{" "}
               {item.seller_display_name ||
@@ -289,7 +838,7 @@ function ItemDetail() {
             </div>
           </div>
 
-          {/* ✅ 비슷한 상품 추천 */}
+          {/* Similar Items Recommendation */}
           <div className="similar-section">
             <h3>🧠 Similar Items</h3>
             <div className="similar-grid">
@@ -298,7 +847,7 @@ function ItemDetail() {
                 <div
                   key={sim.id}
                   className="similar-card"
-                  onClick={() => navigate(`/item/${sim.id}`)} // ✅ 클릭 시 이동
+                  onClick={() => navigate(`/item/${sim.id}`)} // Navigate on click
                   style={{ cursor: "pointer" }}
                 >
                   <img
