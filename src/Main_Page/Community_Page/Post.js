@@ -10,6 +10,7 @@ import { getCommunityPosts } from '../../lib/api/communities';
 import { getPostVotes, voteOnPost } from '../../lib/api/votes';
 import { createChatFromPostAuthor } from '../../lib/api/chat';
 import { supabase } from '../../lib/supabaseClient';
+import { image } from 'framer-motion/client';
 
 export default function Post() {
   const { id } = useParams(); // 실제로는 id로 fetch
@@ -335,8 +336,9 @@ export default function Post() {
               </button>
             </div>
 
-            {post.media && post.media.length > 0 && post.media[0].media_type === 'image' && (
-              <img src={post.media[0].media_url} alt="" className="post-image" />
+            {post.media && post.media.length > 0  && post.media.map((img) => (
+              <img src={img.media_url} alt="" className="post-image" />
+            )
             )}
 
             {isEditing ? (
