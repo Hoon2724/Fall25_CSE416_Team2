@@ -64,6 +64,30 @@
     font-weight: bold;
 }
 
+.googleBtnCtn {
+    text-align: center;
+    margin: 50px;
+
+    border-style: solid;
+    border-radius: 30px;
+    border-color: lightgrey;
+    background-color: lightgray;
+
+    cursor: pointer;
+}
+.googleLogoCtn {
+    display: inline-block;
+    margin-top: 10px;
+}
+.googleLogo {
+    width: 40px;
+}
+.googleBtn {
+    display: inline-block;
+    font-size: 30px;
+    margin: 0px 10px 10px 10px;
+}
+
 @media (max-width: 768px) {
     .welcomeLogoCtn {
         min-height: 10vh;

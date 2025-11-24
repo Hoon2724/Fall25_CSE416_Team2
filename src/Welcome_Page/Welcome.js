@@ -1,11 +1,12 @@
 import './Welcome.css';
 
 import logo from './logo.png';
+import googleLogo from './Google.jpeg';
 
 function Welcome() {
     const openSignInPage = () => {
         console.log("Sign In Clicked");
-        window.open('./signIn', "_self");
+        window.open('./googleSignIn', "_self");
     }
 
     return (
@@ -16,8 +17,11 @@ function Welcome() {
             <div className="welcomeOptionCtn col-lg-5">
                 <div className="welcomeTitle">Welcome!</div>
                 <div className="welcomeDesc">~The perfect help for your college life~</div>
-                <div className="signInBtnCtn">
-                    <div onClick={ openSignInPage } className="signInBtn">Sign In</div>
+                <div onClick={ openSignInPage } className="googleBtnCtn">
+                    <div className="googleLogoCtn">
+                        <img src={googleLogo} className="googleLogo"></img>
+                    </div>
+                    <div className="googleBtn">Sign In with Google</div>
                 </div>
             </div>
                 
