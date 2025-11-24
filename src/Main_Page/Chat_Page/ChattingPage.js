@@ -218,6 +218,7 @@ function ChattingPage() {
                     
                     return {
                         id: chatRoom.id,
+                        item_id: chatRoom.item_id,
                         name: chatName,
                         lastMessage: chatRoom.last_message || 'No messages yet',
                         timestamp: formatTimestamp(chatRoom.last_message_at),
@@ -413,6 +414,7 @@ function ChattingPage() {
                         onSendMessage={handleSendMessage}
                         loading={messagesLoading}
                         error={messagesError}
+                        currentUser={currentUser}
                     />
                 </div>
             </div>

@@ -1,5 +1,16 @@
 import { supabase } from '../supabaseClient';
 
+const toPublicImageUrl = (url) => {
+  if (!url) return null;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  try {
+    const { data } = supabase.storage.from('items').getPublicUrl(url);
+    return data?.publicUrl || url;
+  } catch {
+    return url;
+  }
+};
+
 
 export const getChatRooms = async () => {
   try {
@@ -53,7 +64,16 @@ export const getChatRooms = async () => {
     if (itemIds.length > 0) {
       const { data: itemsData, error: itemsError } = await supabase
         .from('items')
-        .select('id, title, price')
+        .select(`
+          id, 
+          title, 
+          price,
+          item_images (
+            id,
+            url,
+            sort_order
+          )
+        `)
         .in('id', itemIds);
       if (itemsError) throw itemsError;
       itemsMap = new Map(itemsData.map(itemRow => [itemRow.id, itemRow]));
@@ -68,11 +88,17 @@ export const getChatRooms = async () => {
 
       return {
         id: room.id,
+        item_id: room.item_id,
         item: itemProfile
           ? {
               id: itemProfile.id,
               title: itemProfile.title,
               price: itemProfile.price,
+              images: (itemProfile.item_images || []).map(img => ({
+                id: img.id,
+                url: toPublicImageUrl(img.url),
+                sort_order: img.sort_order || 0
+              }))
             }
           : null,
         buyer: buyerProfile
@@ -153,7 +179,7 @@ export const createChatRoom = async (itemId) => {
       .eq('item_id', itemId)
       .eq('buyer_id', user.id)
       .eq('seller_id', sellerId)
-      .single();
+      .maybeSingle();
 
     if (existingRoom) {
       return {
@@ -213,6 +239,147 @@ export const createChatRoom = async (itemId) => {
 
 export const createChatRoomFromItem = async (itemId) => {
   return await createChatRoom(itemId);
+};
+
+export const completeTransaction = async (chatRoomId, rating, comment = '') => {
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError) throw authError;
+
+    if (!user) {
+      return {
+        res_code: 401,
+        res_msg: 'Authentication required'
+      };
+    }
+
+    // Get chat room info
+    const { data: chatRoom, error: chatRoomError } = await supabase
+      .from('chat_rooms')
+      .select('item_id, buyer_id, seller_id')
+      .eq('id', chatRoomId)
+      .single();
+
+    if (chatRoomError) throw chatRoomError;
+
+    if (!chatRoom.item_id) {
+      return {
+        res_code: 400,
+        res_msg: 'This chat room is not associated with an item'
+      };
+    }
+
+    // Determine who is the other party (the one being rated)
+    const isBuyer = chatRoom.buyer_id === user.id;
+    const isSeller = chatRoom.seller_id === user.id;
+
+    if (!isBuyer && !isSeller) {
+      return {
+        res_code: 403,
+        res_msg: 'You are not a participant in this chat room'
+      };
+    }
+
+    // Always rate the seller (the person who posted the item)
+    const revieweeId = chatRoom.seller_id;
+
+    // Validate rating: 1-5 range, 0.5 increments
+    if (rating < 1 || rating > 5) {
+      return {
+        res_code: 400,
+        res_msg: 'Rating must be between 1 and 5'
+      };
+    }
+    
+    const ratingRounded = Math.round(rating * 2) / 2;
+    if (Math.abs(rating - ratingRounded) > 0.01) {
+      return {
+        res_code: 400,
+        res_msg: 'Rating must be in 0.5 increments (e.g., 1.0, 1.5, 2.0, etc.)'
+      };
+    }
+
+    // Check if review already exists
+    const { data: existingReview, error: checkError } = await supabase
+      .from('reviews')
+      .select('id')
+      .eq('reviewer_id', user.id)
+      .eq('reviewee_id', revieweeId)
+      .eq('item_id', chatRoom.item_id)
+      .maybeSingle();
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      throw checkError;
+    }
+
+    if (existingReview) {
+      return {
+        res_code: 409,
+        res_msg: 'You have already reviewed this transaction'
+      };
+    }
+
+    // Create review
+    const { data: newReview, error: reviewError } = await supabase
+      .from('reviews')
+      .insert([
+        {
+          reviewer_id: user.id,
+          reviewee_id: revieweeId,
+          item_id: chatRoom.item_id,
+          rating: ratingRounded,
+          comment: comment || null
+        }
+      ])
+      .select()
+      .single();
+
+    if (reviewError) throw reviewError;
+
+    // Update total_reviews count
+    const { data: currentUser, error: userFetchError } = await supabase
+      .from('users')
+      .select('total_reviews')
+      .eq('id', revieweeId)
+      .single();
+
+    if (!userFetchError && currentUser) {
+      const nextCount = (currentUser.total_reviews ?? 0) + 1;
+      await supabase
+        .from('users')
+        .update({ total_reviews: nextCount })
+        .eq('id', revieweeId);
+    }
+
+    // Recalculate trust_score
+    const { data: reviews, error: reviewsError } = await supabase
+      .from('reviews')
+      .select('rating')
+      .eq('reviewee_id', revieweeId);
+
+    if (!reviewsError && reviews.length > 0) {
+      const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
+      
+      await supabase
+        .from('users')
+        .update({
+          trust_score: Math.round(averageRating * 10) / 10
+        })
+        .eq('id', revieweeId);
+    }
+
+    return {
+      res_code: 200,
+      res_msg: 'Transaction completed and review submitted successfully',
+      review: newReview
+    };
+  } catch (error) {
+    return {
+      res_code: 400,
+      res_msg: error.message,
+      error: error
+    };
+  }
 };
 
 export const createChatFromPostAuthor = async (postId) => {

@@ -21,6 +21,23 @@ export const createReview = async (reviewData) => {
       };
     }
 
+    // Validate rating: 1-5 range, 0.5 increments
+    if (rating < 1 || rating > 5) {
+      return {
+        res_code: 400,
+        res_msg: 'Rating must be between 1 and 5'
+      };
+    }
+    
+    // Check if rating is in 0.5 increments
+    const ratingRounded = Math.round(rating * 2) / 2;
+    if (Math.abs(rating - ratingRounded) > 0.01) {
+      return {
+        res_code: 400,
+        res_msg: 'Rating must be in 0.5 increments (e.g., 1.0, 1.5, 2.0, etc.)'
+      };
+    }
+
     const { data: existingReview, error: checkError } = await supabase
       .from('reviews')
       .select('id')
@@ -53,12 +70,20 @@ export const createReview = async (reviewData) => {
 
     if (reviewError) throw reviewError;
 
-    await supabase
+    // Update total_reviews count
+    const { data: currentUser, error: userFetchError } = await supabase
       .from('users')
-      .update({
-        total_reviews: supabase.raw('total_reviews + 1')
-      })
-      .eq('id', reviewee_id);
+      .select('total_reviews')
+      .eq('id', reviewee_id)
+      .single();
+
+    if (!userFetchError && currentUser) {
+      const nextCount = (currentUser.total_reviews ?? 0) + 1;
+      await supabase
+        .from('users')
+        .update({ total_reviews: nextCount })
+        .eq('id', reviewee_id);
+    }
 
     const { data: reviews, error: reviewsError } = await supabase
       .from('reviews')

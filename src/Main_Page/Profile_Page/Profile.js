@@ -34,6 +34,16 @@ function Profile() {
             }
         };
         loadUser();
+
+        // Listen for rating updates
+        const handleRatingUpdate = () => {
+            loadUser();
+        };
+        window.addEventListener('ratingUpdated', handleRatingUpdate);
+
+        return () => {
+            window.removeEventListener('ratingUpdated', handleRatingUpdate);
+        };
     }, []);
 
     const handleLogout = async () => {

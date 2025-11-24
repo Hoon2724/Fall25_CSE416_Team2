@@ -112,6 +112,53 @@ function ItemDetail() {
     fetchItemAndSimilar();
   }, [id]);
 
+  // Listen for rating updates separately to avoid dependency issues
+  useEffect(() => {
+    const handleRatingUpdate = (event) => {
+      // Only refresh if the updated user is the seller of this item
+      if (item?.seller_id && event.detail?.revieweeId === item.seller_id) {
+        // Re-fetch item details to get updated seller trust_score
+        const refreshItem = async () => {
+          try {
+            const itemRes = await getItemDetails(id);
+            if (itemRes.res_code === 200 && itemRes.item) {
+              const baseItem = itemRes.item;
+              const { data: tagData } = await supabase
+                .from("item_tags")
+                .select("tag")
+                .eq("item_id", id);
+              const tagsList = tagData?.map((row) => row.tag) || [];
+              
+              setItem({
+                ...baseItem,
+                image_url: baseItem.image_url || baseItem.images?.[0]?.url || null,
+                images: baseItem.images || [],
+                tags: baseItem.tags || tagsList,
+                seller_id: baseItem.seller_id || baseItem.seller?.id || null,
+                seller_display_name:
+                  baseItem.seller_display_name ||
+                  baseItem.seller?.display_name ||
+                  null,
+                seller_trust_score:
+                  baseItem.seller_trust_score ??
+                  baseItem.seller?.trust_score ??
+                  null,
+              });
+            }
+          } catch (err) {
+            console.error('[ItemDetail] Error refreshing item after rating update:', err);
+          }
+        };
+        refreshItem();
+      }
+    };
+    window.addEventListener('ratingUpdated', handleRatingUpdate);
+
+    return () => {
+      window.removeEventListener('ratingUpdated', handleRatingUpdate);
+    };
+  }, [id, item?.seller_id]);
+
   useEffect(() => {
     const loadCurrentUser = async () => {
       try {
@@ -824,7 +871,7 @@ function ItemDetail() {
                 <div className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} id="fav"></div>
                 <div>{isFavorite ? 'Favorited' : 'Favorite'}</div>
               </button>
-            {!item?.seller_id || item.seller_id !== currentUserId ? (
+            {item?.seller_id && currentUserId && String(item.seller_id) !== String(currentUserId) ? (
               <button
                 className="item-contact col-lg-1"
                 onClick={handleContactSeller}
