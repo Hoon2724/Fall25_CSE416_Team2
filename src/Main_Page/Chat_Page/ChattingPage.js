@@ -68,24 +68,30 @@ function ChattingPage() {
 
     useEffect(() => {
         const unsubscribe = subscribeChatRooms((payload) => {
-            // 내 채팅방만 처리 (타 계정의 UPDATE 이벤트 무시)
+            // Determine event type: INSERT (new), UPDATE (changed), DELETE (removed)
+            const hasNew = !!payload?.new;
+            const hasOld = !!payload?.old;
+            const isInsert = hasNew && !hasOld;
+            const isDelete = !hasNew && hasOld;
+            
+            // Only reload if a new chat room is created or deleted
+            // Ignore UPDATE events (last_message changes, etc.) - we handle those locally
+            if (!isInsert && !isDelete) {
+                return; // Ignore UPDATE events
+            }
+            
             const rec = payload?.new || payload?.old || {};
             if (currentUser && rec.buyer_id && rec.seller_id) {
                 const mine = (rec.buyer_id === currentUser.id) || (rec.seller_id === currentUser.id);
                 if (!mine) return;
             }
-            const changedId = payload?.new?.id || payload?.old?.id || null;
-            // 현재 보고있는 방의 업데이트라면 무시 (이미 UI에서 반영됨)
-            if (changedId && selectedChat && selectedChat.id === changedId) {
-                return;
-            }
-            if (changedId) setPendingChatId(prev => prev || changedId);
-            // 디바운스 + 로딩 중 가드
+            
+            // Only reload if it's a new chat room (INSERT) or deleted (DELETE)
             if (roomsLoadingRef.current) return;
             if (roomsReloadTimerRef.current) clearTimeout(roomsReloadTimerRef.current);
             roomsReloadTimerRef.current = setTimeout(() => {
                 loadChatRooms();
-            }, 150);
+            }, 300);
         });
         return () => {
             if (roomsReloadTimerRef.current) {
@@ -94,7 +100,7 @@ function ChattingPage() {
             }
             if (typeof unsubscribe === 'function') unsubscribe();
         };
-    }, [currentUser, selectedChat]);
+    }, [currentUser]);
 
     const loadCurrentUser = async () => {
         try {
@@ -142,8 +148,22 @@ function ChattingPage() {
             currentUser?.id || null,
             // onBroadcastMessage
             (messageData, currentUserId) => {
+                const isOwnMessage = messageData.senderId === currentUserId;
+                const isCurrentChat = selectedChat && selectedChat.id === messageData.chat_room_id;
+                
+                // If message is not from current user and not in current chat, increment unreadCount
+                if (!isOwnMessage && !isCurrentChat) {
+                    setChatRooms(prevRooms => 
+                        prevRooms.map(chat => 
+                            chat.id === messageData.chat_room_id 
+                                ? { ...chat, unreadCount: (chat.unreadCount || 0) + 1 }
+                                : chat
+                        )
+                    );
+                }
+                
                 // Only add message if it belongs to the currently selected chat room
-                if (!selectedChat || selectedChat.id !== messageData.chat_room_id) {
+                if (!isCurrentChat) {
                     return;
                 }
                 setMessages(prev => {
@@ -155,30 +175,53 @@ function ChattingPage() {
                         senderName: messageData.senderName,
                         message: messageData.content,
                         timestamp: formatMessageTime(messageData.created_at),
-                        isOwn: messageData.senderId === currentUserId,
+                        isOwn: isOwnMessage,
                         createdAt: new Date(messageData.created_at).getTime()
                     }];
                     // keep ascending by createdAt so newest is at bottom
                     return next.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
                 });
 
+                // Update lastMessage only if it's different (avoid unnecessary updates)
                 if (selectedChat && selectedChat.id === messageData.chat_room_id) {
                     const now = new Date().toISOString();
-                    setChatRooms(prev => prev.map(chat => 
-                        chat.id === messageData.chat_room_id 
-                            ? { 
-                                ...chat, 
-                                lastMessage: messageData.content, 
-                                timestamp: formatTimestamp(now),
-                                lastMessageAt: now
-                            }
-                            : chat
-                    ));
+                    setChatRooms(prev => {
+                        const chat = prev.find(c => c.id === messageData.chat_room_id);
+                        if (chat && chat.lastMessage !== messageData.content) {
+                            return prev.map(c => 
+                                c.id === messageData.chat_room_id 
+                                    ? { 
+                                        ...c, 
+                                        lastMessage: messageData.content, 
+                                        timestamp: formatTimestamp(now),
+                                        lastMessageAt: now
+                                    }
+                                    : c
+                            );
+                        }
+                        return prev; // No change, return same array
+                    });
                 }
             },
             // onBackupInsert
-            () => {
+            (payload) => {
                 // 백업: 누락 시 동기화 (채팅방 목록 전체 리로드는 루프를 유발할 수 있으니 생략)
+                if (payload?.new) {
+                    const messageData = payload.new;
+                    const isOwnMessage = messageData.sender_id === currentUser?.id;
+                    const isCurrentChat = selectedChat && selectedChat.id === messageData.chat_room_id;
+                    
+                    // If message is not from current user and not in current chat, increment unreadCount
+                    if (!isOwnMessage && !isCurrentChat) {
+                        setChatRooms(prevRooms => 
+                            prevRooms.map(chat => 
+                                chat.id === messageData.chat_room_id 
+                                    ? { ...chat, unreadCount: (chat.unreadCount || 0) + 1 }
+                                    : chat
+                            )
+                        );
+                    }
+                }
                 loadMessages(selectedChat.id);
             }
         );
@@ -210,10 +253,10 @@ function ChattingPage() {
                     } else {
                         // Community contact chat: show the other person's name
                         // If current user is buyer, show seller's name; if seller, show buyer's name
-                        const isCurrentUserBuyer = currentUser && chatRoom.buyer.id === currentUser.id;
+                        const isCurrentUserBuyer = currentUser && chatRoom.buyer?.id === currentUser.id;
                         chatName = isCurrentUserBuyer 
-                            ? (chatRoom.seller.display_name || 'Unknown User')
-                            : (chatRoom.buyer.display_name || 'Unknown User');
+                            ? (chatRoom.seller?.display_name || 'Unknown User')
+                            : (chatRoom.buyer?.display_name || 'Unknown User');
                     }
                     
                     return {
@@ -223,38 +266,36 @@ function ChattingPage() {
                         lastMessage: chatRoom.last_message || 'No messages yet',
                         timestamp: formatTimestamp(chatRoom.last_message_at),
                         lastMessageAt: chatRoom.last_message_at,
+                        created_at: chatRoom.created_at,
                         unreadCount: chatRoom.unread_count ?? 0,
                         buyer: chatRoom.buyer,
                         seller: chatRoom.seller,
                         item: chatRoom.item
                     };
                 });
+                // Sort chat rooms by created_at (oldest first, at the bottom)
+                // API already returns sorted by created_at ascending, so just set directly
                 setChatRooms(transformedChats);
 
-                let desiredChat = null;
+                // CRITICAL: Only update selectedChat in these VERY SPECIFIC cases:
+                // 1. pendingChatId exists (user explicitly navigated to a chat via route)
+                // 2. No chat is currently selected AND this is the FIRST load (initial state)
+                // NEVER update selectedChat for any other reason - user must click to change
+                
                 if (pendingChatId) {
-                    desiredChat = transformedChats.find((chat) => chat.id === pendingChatId) || null;
+                    // User explicitly navigated to a specific chat via route
+                    const desiredChat = transformedChats.find((chat) => chat.id === pendingChatId) || null;
+                    if (desiredChat) {
+                        setSelectedChat(desiredChat);
+                        setPendingChatId(null);
+                    }
+                } else if (!selectedChat && transformedChats.length > 0) {
+                    // Only auto-select on initial load when no chat is selected
+                    // This should only happen once when the page first loads
+                    setSelectedChat(transformedChats[0]);
                 }
-                if (!desiredChat && selectedChat) {
-                    desiredChat = transformedChats.find((chat) => chat.id === selectedChat.id) || null;
-                }
-                if (!desiredChat && transformedChats.length > 0) {
-                    desiredChat = transformedChats[0];
-                }
-
-                // Update selectedChat - always sync with latest data from chatRooms
-                const currentId = selectedChat?.id || null;
-                const nextId = desiredChat?.id || null;
-                if (currentId !== nextId) {
-                    setSelectedChat(desiredChat || null);
-                } else if (desiredChat && currentId === nextId) {
-                    // Same chat selected, but update with latest data (including name)
-                    setSelectedChat(desiredChat);
-                }
-
-                if (pendingChatId && desiredChat) {
-                    setPendingChatId(null);
-                }
+                // If selectedChat already exists, DO NOTHING - don't check if it exists, don't update it
+                // This prevents flickering when other users interact with their chats
             }
         } catch (error) {
             console.error('Error loading chat rooms:', error);
@@ -289,6 +330,14 @@ function ChattingPage() {
                 if (currentUser) {
                     try {
                         await markMessagesAsRead(chatRoomId);
+                        // Update unreadCount to 0 for this chat room
+                        setChatRooms(prevRooms => 
+                            prevRooms.map(chat => 
+                                chat.id === chatRoomId 
+                                    ? { ...chat, unreadCount: 0 }
+                                    : chat
+                            )
+                        );
                     } catch (e) {
                         console.error('Error marking messages as read:', e);
                     }
@@ -352,47 +401,36 @@ function ChattingPage() {
                     });
                 },
                 onAfterPersist: (msg) => {
+                    // Update lastMessage only if it's different
                     const now = new Date().toISOString();
-                    // Update chatRooms and sync selectedChat to ensure name stays in sync
                     setChatRooms(prevRooms => {
-                        const updatedRooms = prevRooms.map(chat => 
-                            chat.id === selectedChat.id 
-                                ? { 
-                                    ...chat, 
-                                    lastMessage: msg.content, 
-                                    timestamp: formatTimestamp(now),
-                                    lastMessageAt: now
-                                }
-                                : chat
-                        );
-                        // Sync selectedChat with updated room data to ensure name matches
-                        const updatedChat = updatedRooms.find(chat => chat.id === selectedChat.id);
-                        if (updatedChat) {
-                            setSelectedChat(updatedChat);
+                        const chat = prevRooms.find(c => c.id === selectedChat.id);
+                        if (chat && chat.lastMessage !== msg.content) {
+                            return prevRooms.map(c => 
+                                c.id === selectedChat.id 
+                                    ? { 
+                                        ...c, 
+                                        lastMessage: msg.content, 
+                                        timestamp: formatTimestamp(now),
+                                        lastMessageAt: now
+                                    }
+                                    : c
+                            );
                         }
-                        return updatedRooms;
+                        return prevRooms; // No change, return same array
                     });
+                    // Don't update selectedChat - it causes unnecessary re-renders
                 }
             },
             messageChannelRef.current?.sendBroadcast
         );
     };
 
-    useEffect(() => {
-        if (!currentUser) return;
-        setMessages(prev => prev.map(message => ({
-            ...message,
-            isOwn: message.senderId === currentUser.id
-        })));
-    }, [currentUser]);
+    // Remove this useEffect - isOwn is already calculated when messages are loaded/added
 
-    const sortedChatRooms = useMemo(() => {
-        return [...chatRooms].sort((a, b) => {
-            const aDate = a.lastMessageAt ? new Date(a.lastMessageAt) : new Date(0);
-            const bDate = b.lastMessageAt ? new Date(b.lastMessageAt) : new Date(0);
-            return bDate - aDate;
-        });
-    }, [chatRooms]);
+    // Keep chat rooms sorted by created_at (oldest first, at the bottom)
+    // API already returns them in this order, so no need to re-sort
+    const sortedChatRooms = chatRooms;
 
     return (
         <div className="chatting-page-wrapper">

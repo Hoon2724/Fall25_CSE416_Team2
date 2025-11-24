@@ -26,18 +26,14 @@ function Chatroom({ selectedChat, messages = [], onSendMessage, loading, error, 
             if (selectedChat && selectedChat.item_id) {
                 // Always try to load item data if item_id exists, even if selectedChat.item exists
                 // This ensures we have the latest data
-                console.log('[Chatroom] Loading item data for item_id:', selectedChat.item_id);
                 try {
                     const result = await getItemDetails(selectedChat.item_id);
                     if (result.res_code === 200 && result.item) {
                         setItemData(result.item);
-                        console.log('[Chatroom] Item data loaded:', result.item);
                     } else {
-                        console.warn('[Chatroom] Failed to load item data:', result);
                         setItemData(null);
                     }
                 } catch (err) {
-                    console.error('[Chatroom] Error loading item data:', err);
                     setItemData(null);
                 }
             } else {
@@ -92,28 +88,16 @@ function Chatroom({ selectedChat, messages = [], onSendMessage, loading, error, 
         // Use itemData if selectedChat.item is null
         const item = selectedChat?.item || itemData;
         
-        console.log('[Chatroom] getItemThumbnail called:', { 
-            hasSelectedChatItem: !!selectedChat?.item,
-            hasItemData: !!itemData,
-            item,
-            itemImages: item?.images,
-            imagesLength: item?.images?.length
-        });
-        
         // Check if item exists and has images
         if (!item) {
-            console.log('[Chatroom] getItemThumbnail: no item');
             return null;
         }
         if (!item.images || item.images.length === 0) {
-            console.log('[Chatroom] getItemThumbnail: no images', { images: item.images });
             return null;
         }
         // Get first image sorted by sort_order
         const sortedImages = [...item.images].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
-        const thumbnailUrl = sortedImages[0]?.url || null;
-        console.log('[Chatroom] getItemThumbnail: returning', { thumbnailUrl, sortedImages });
-        return thumbnailUrl;
+        return sortedImages[0]?.url || null;
     };
 
     const getOtherPartyName = () => {
@@ -128,28 +112,10 @@ function Chatroom({ selectedChat, messages = [], onSendMessage, loading, error, 
     const isItemChat = selectedChat && selectedChat.item_id;
     // Complete Transaction button should only be visible to the buyer (the one who initiated the chat)
     // Compare as strings to handle UUID type differences
-    const isBuyer = currentUser && selectedChat && selectedChat.buyer && 
+    const isBuyer = currentUser && selectedChat && selectedChat.buyer?.id && 
         String(selectedChat.buyer.id) === String(currentUser.id);
     const showCompleteTransaction = isItemChat && isBuyer;
     
-    // Debug logging - always log to help diagnose issues
-    useEffect(() => {
-        console.log('[Chatroom] Render debug:', {
-            hasSelectedChat: !!selectedChat,
-            item_id: selectedChat?.item_id,
-            hasItem: !!selectedChat?.item,
-            hasItemData: !!itemData,
-            buyer: selectedChat?.buyer,
-            buyerId: selectedChat?.buyer?.id,
-            seller: selectedChat?.seller,
-            currentUserId: currentUser?.id,
-            isItemChat,
-            isBuyer,
-            showCompleteTransaction,
-            thumbnailUrl,
-            itemImages: (selectedChat?.item || itemData)?.images
-        });
-    }, [selectedChat, itemData, currentUser, isItemChat, isBuyer, showCompleteTransaction, thumbnailUrl]);
 
     return (
         <div className="chatroom-container">

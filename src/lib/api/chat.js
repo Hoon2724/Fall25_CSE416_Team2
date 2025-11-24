@@ -38,7 +38,7 @@ export const getChatRooms = async () => {
         created_at
       `)
       .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
-      .order('last_message_at', { ascending: false });
+      .order('created_at', { ascending: true }); // Sort by creation time, oldest first
 
     if (chatRoomsError) throw chatRoomsError;
 

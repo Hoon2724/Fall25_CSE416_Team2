@@ -19,12 +19,32 @@ function ChatList({ chats, selectedChat, onSelectChat, loading, error }) {
                         key={chat.id}
                         className={`chat-item ${selectedChat && selectedChat.id === chat.id ? 'active' : ''}`}
                         onClick={() => onSelectChat && onSelectChat(chat)}
+                        style={{ position: 'relative' }}
                     >
                         <div className="chat-item-info">
                             <div className="chat-item-name">{chat.name}</div>
                             <div className="chat-item-timestamp">{chat.timestamp}</div>
                         </div>
                         <div className="chat-item-message">{chat.lastMessage}</div>
+                        {chat.unreadCount > 0 && (
+                            <span style={{
+                                position: 'absolute',
+                                top: 8,
+                                right: 8,
+                                backgroundColor: 'red',
+                                color: 'white',
+                                borderRadius: '50%',
+                                width: 18,
+                                height: 18,
+                                fontSize: 11,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontWeight: 'bold'
+                            }}>
+                                {chat.unreadCount > 9 ? '9+' : chat.unreadCount}
+                            </span>
+                        )}
                     </div>
                 ))}
             </div>
