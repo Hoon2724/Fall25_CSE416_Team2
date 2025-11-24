@@ -298,7 +298,7 @@ export default function Post() {
                     const userId = currentUserId;
                     const isAuthor = authorId && userId && String(authorId) === String(userId);
                     
-                    if (!isAuthor) {
+                    if (!isAuthor && !isAdmin) {
                       return null;
                     }
                     
