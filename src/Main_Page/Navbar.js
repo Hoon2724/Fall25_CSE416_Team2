@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import './Navbar.css';
 import logo from '../Welcome_Page/logo.png';
 import { supabase } from '../lib/supabaseClient';
+import { getCurrentUser, signOut } from '../lib/api/index.js';
 
 function Navbar() {
     const [notifications, setNotifications] = useState([]);
@@ -10,6 +11,9 @@ function Navbar() {
     const [notificationsLoading, setNotificationsLoading] = useState(false);
     const subscribedRef = useRef(false);
     const deduplicationRef = useRef(false);
+    const [isAdmin, setAdmin] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
     // Remove duplicate notifications and calculate unreadCount
     const deduplicatedNotifications = useMemo(() => {
@@ -37,6 +41,30 @@ function Navbar() {
     const unreadCount = useMemo(() => {
         return Math.min(99, deduplicatedNotifications.filter(notif => !notif.is_read).length);
     }, [deduplicatedNotifications]);
+
+    useEffect(() => {
+        const checkAdmin = async () => {
+            setLoading(true);
+            setError('');
+            try {
+                const res = await getCurrentUser();
+                if (res.res_code === 200) {
+                    if (res.user && res.user.is_admin) {
+                    setAdmin(res.user);
+                    } else {
+                    setError('You are not authorized to access this page');
+                    }
+                } else {
+                    setError(res.res_msg || 'Failed to load user');
+                }
+            } catch (e) {
+                setError('Network error');
+            } finally {
+                setLoading(false);
+            }
+        };
+        checkAdmin();
+    }, []);
 
     // Broadcast-only model: no polling
     useEffect(() => {
@@ -231,9 +259,13 @@ function Navbar() {
                     </li>
                 </ul>
                 <ul className="navbar-nav ms-auto iconCtn">
-                    <li className="nav-item adminIcon">
-                        <Link className='nav-link' to='/admin'><span className="bi bi-file-earmark-person"></span></Link>
-                    </li>
+                    {
+                        isAdmin && (
+                        <li className="nav-item adminIcon">
+                            <Link className='nav-link' to='/admin'><span className="bi bi-file-earmark-person"></span></Link>
+                        </li>
+                        )
+                    }
                     <li className="nav-item searchIcon">
                         <Link className='nav-link' to='/search'><span className="bi bi-search"></span></Link>
                     </li>
