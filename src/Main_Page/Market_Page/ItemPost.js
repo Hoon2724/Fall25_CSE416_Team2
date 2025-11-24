@@ -116,14 +116,22 @@ function ItemPost() {
 
   /** 🔸 파일 선택 시 */
   async function onSelectFiles(e) {
-    const picked = Array.from(e.target.files || []).slice(0, 10);
+    const picked = Array.from(e.target.files || []);
+    console.log(picked);
     if (!picked.length) return;
+    if (imageUrls.length == 10) {
+      alert("You can only submit up to 10 images");
+      setErrorMsg("You can only submit up to 10 images");
+      setLoading(false);
+
+      return;
+    }
 
     setLoading(true);
     setErrorMsg("");
 
     try {
-      const urls = [];
+      const urls = imageUrls;
       for (let f of picked) {
         const ext = f.name.split(".").pop()?.toLowerCase();
         if (ext === "jfif" || f.type === "" || f.type === "image/pjpeg") {
@@ -274,6 +282,8 @@ function ItemPost() {
             )}
           </div>
 
+          {errorMsg && <p className="error-text">{errorMsg}</p>}
+
           {/* 입력 폼 */}
           <div className="form-section">
             <div className="form-group">
@@ -345,7 +355,6 @@ function ItemPost() {
               <button className="post-button" onClick={onPost} disabled={loading}>
                 {loading ? "Processing..." : "Click to post"}
               </button>
-              {errorMsg && <p className="error-text">{errorMsg}</p>}
             </div>
           </div>
         </div>

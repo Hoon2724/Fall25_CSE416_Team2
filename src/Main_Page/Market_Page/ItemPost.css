@@ -40,13 +40,13 @@
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  transition: background 0.2s, opacity 0.15s ease, transform 0.15s ease;
+  transition: background-color 0.2s, opacity 0.15s ease, transform 0.15s ease;
   opacity: 0;
   transform: scale(0.9);
 }
 
 .preview-remove-btn:hover {
-  background: rgba(220, 53, 69, 1);
+  background-color: rgba(220, 53, 69, 1);
 }
 
 .preview-item-wrapper:hover .preview-remove-btn {
@@ -93,6 +93,10 @@
 
 /* Image Upload Section */
 .image-upload-section {
+    text-align: center;
+}
+
+.item-creation-content .error-text {
     text-align: center;
 }
 
@@ -174,18 +178,14 @@
 
 /* Post Section */
 .post-section {
-    text-align: center;
     margin-top: 20px;
     margin-bottom: 0;
 }
 
-.post-button {
-    position: static !important;
-    bottom: auto !important;
-    right: auto !important;
-    left: auto !important;
-    transform: none !important;
-    z-index: auto !important;
+.form-section .post-section .post-button {
+    position: fixed !important;
+    bottom: 5% !important;
+    right: 40%;
     background-color: #6c757d;
     color: white;
     border: none;
@@ -197,7 +197,6 @@
     transition: background-color 0.2s ease;
     min-width: 200px;
 }
-
 .post-button:hover {
     background-color: #5a6268;
 }
