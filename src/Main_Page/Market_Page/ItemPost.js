@@ -162,7 +162,7 @@ function ItemPost() {
 
   /** 🔸 썸네일 클릭 시 해당 이미지 제거 */
   function removeImage(url) {
-    setImageUrls((prev) => prev.filter((u) => u !== url));
+    setImageUrls(imageUrls.filter((u) => u !== url));
   }
 
   /** 🔸 게시물 등록 */
