@@ -223,8 +223,8 @@
 @media (max-width: 768px) {
     .itemUploadButton {
         position: fixed;
-        top: 88%;
-        left: 85%;
+        top: 85%;
+        left: 75%;
         cursor: pointer;
 
         margin-bottom: 10px;
