@@ -100,7 +100,6 @@ function Profile() {
                         className="editBtn logoutBtn" 
                         onClick={handleLogout}
                         style={{ 
-                            marginTop: '10px',
                             cursor: logoutLoading ? 'not-allowed' : 'pointer',
                             opacity: logoutLoading ? 0.6 : 1
                         }}
@@ -109,21 +108,21 @@ function Profile() {
                     </div>
                 </div>
             </div>
-            <ul className="nav flex-column optionList">
-                <li className="nav-item optionItemList">
+            <ul className="optionList">
+                <li className="optionItemList">
                     <div className="option">My Item</div>
                     <Option mode="myItem" />
                 </li>
-                <li className="nav-item optionItemList">
+                <li className="optionItemList">
                     <div className="option history">Previously viewed items</div>
                     <Option mode="history" />
                 </li>
-                <li className="nav-item optionItem">
+                <li className="optionItem">
                     <Link to='../option/favorite'>
                         <div className="option favPosts">My Favorite Posts</div>
                     </Link>
                 </li>
-                <li className="nav-item optionItem">
+                <li className="optionItem">
                     <Link to='../option/post'>
                         <div className="option myPosts">My Community Posts</div>
                     </Link>

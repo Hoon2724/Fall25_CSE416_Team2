@@ -3,8 +3,8 @@
 }
 
 .pfp {
-    width: 250px;
-    height: 250px;
+    width: 180px;
+    height: 180px;
     border-radius: 50%;
     object-fit: cover;
     object-position: center;
@@ -12,14 +12,19 @@
 }
 
 .userInfoCtn {
-    padding-top: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
 }
 .username {
     font-size: 30px;
 }
 
 .editBtnCtn{
-    padding-top: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .editBtn {
     display: inline-block;
@@ -49,9 +54,15 @@
 
 
 .optionList {
+    display: flex;
+    flex-direction: column;
+
     border-top-style: solid;
     border-color: black;
-    overflow: clip;
+    width: 100%;
+
+    list-style-type: none;
+    padding: 0;
 }
 .optionItemList {
     padding: 10px;
@@ -60,6 +71,7 @@
     border-width: 2px;
     border-color: black;
 }
+
 .optionItem {
     padding: 10px;
 
@@ -77,4 +89,29 @@
 }
 a {
     text-decoration: none;
+}
+
+@media (max-width: 768px) {
+    .upperCtn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .pfpCtn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .userInfoCtn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+    .editBtnCtn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 10px;
+    }
 }

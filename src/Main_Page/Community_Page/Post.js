@@ -10,7 +10,6 @@ import { getCommunityPosts } from '../../lib/api/communities';
 import { getPostVotes, voteOnPost } from '../../lib/api/votes';
 import { createChatFromPostAuthor } from '../../lib/api/chat';
 import { supabase } from '../../lib/supabaseClient';
-import { image } from 'framer-motion/client';
 
 export default function Post() {
   const { id } = useParams(); // 실제로는 id로 fetch
