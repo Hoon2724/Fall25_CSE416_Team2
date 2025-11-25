@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Popup from 'reactjs-popup';
 
 import './Profile.css'
 import profile from './profile.png';
 import Navbar from '../Navbar.js';
 import { getCurrentUser, signOut } from '../../lib/api';
-import Item from './../Market_Page/Item';
 import Option from './Option.js';
+import UserReviews from './UserReviews.js';
 
 function Profile() {
     const navigate = useNavigate();
@@ -138,6 +137,10 @@ function Profile() {
                     <Link to='../option/post'>
                         <div className="option myPosts">My Community Posts</div>
                     </Link>
+                </li>
+                <li className="optionItemList">
+                    <div className="option">My Reviews</div>
+                    <UserReviews userId={user.id} />
                 </li>
             </ul>
         </div>

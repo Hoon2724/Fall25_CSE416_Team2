@@ -2,12 +2,24 @@ import { supabase } from '../supabaseClient';
 
 const toPublicImageUrl = (url) => {
   if (!url) return null;
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  
+  // If it's already a full URL, return as is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
   try {
-    // Our app uploads to the 'items' bucket from ItemPost
+    // Try to get public URL from storage
     const { data } = supabase.storage.from('items').getPublicUrl(url);
-    return data?.publicUrl || url;
-  } catch {
+    if (data?.publicUrl) {
+      return data.publicUrl;
+    }
+    
+    // Fallback: construct URL manually if needed
+    const { data: { publicUrl } } = supabase.storage.from('items').getPublicUrl(url);
+    return publicUrl || url;
+  } catch (error) {
+    console.warn('Error getting public URL for:', url, error);
     return url;
   }
 };
@@ -34,6 +46,7 @@ export const getItems = async (filters = {}) => {
         category,
         category_id,
         seller_id,
+        status,
         created_at,
         categories (
           id,
@@ -79,30 +92,45 @@ export const getItems = async (filters = {}) => {
 
     if (itemsError) throw itemsError;
 
-    const transformedItems = items.map(item => ({
-      id: item.id,
-      title: item.title,
-      description: item.description,
-      price: item.price,
-      category: item.category || item.categories?.name || null,
-      category_id: item.category_id,
-      seller: {
-        id: item.seller_id,
-        display_name: item.users?.display_name || 'Seller',
-        trust_score: item.users?.trust_score || 0.0
-      },
-      images: item.item_images ? item.item_images.map(img => ({
-        id: img.id,
-        url: toPublicImageUrl(img.url)
-      })) : [],
-      created_at: item.created_at
-    }));
+    const transformedItems = items.map(item => {
+      const images = item.item_images
+        ? item.item_images.map(img => ({
+            id: img.id,
+            url: toPublicImageUrl(img.url)
+          }))
+        : [];
+
+      const displayName = item.users?.display_name || null;
+      const trustScore = item.users?.trust_score ?? null;
+
+      return {
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        price: item.price,
+        category: item.categories?.name || null,
+        category_id: item.category_id,
+        status: item.status || 'selling',
+        image_url: images.length > 0 ? images[0].url : null,
+        images,
+        tags: [],
+        seller_id: item.seller_id,
+        seller_display_name: displayName,
+        seller_trust_score: trustScore,
+        seller: {
+          id: item.seller_id,
+          display_name: displayName,
+          trust_score: trustScore
+        },
+        created_at: item.created_at
+      };
+    });
 
     const totalPages = Math.ceil(count / limit);
 
     return {
       res_code: 200,
-      res_msg: 'Items list retrieved successfully',
+      res_msg: 'Items retrieved successfully',
       items: transformedItems,
       pagination: {
         current_page: page,
@@ -114,10 +142,10 @@ export const getItems = async (filters = {}) => {
       meta: {
         sort: sort,
         filters: {
-          category: category,
-          search: search,
-          price_min: price_min,
-          price_max: price_max
+          category,
+          search,
+          price_min,
+          price_max
         }
       }
     };
@@ -130,7 +158,7 @@ export const getItems = async (filters = {}) => {
   }
 };
 
-export const getLatestItems = async (limit = 20) => {
+export const getLatestItems = async (limit = 10) => {
   try {
     const { data: items, error: itemsError } = await supabase
       .from('items')
@@ -142,6 +170,7 @@ export const getLatestItems = async (limit = 20) => {
         category,
         category_id,
         seller_id,
+        status,
         created_at,
         item_images (
           url
@@ -177,6 +206,7 @@ export const getLatestItems = async (limit = 20) => {
         price: item.price,
         category: item.category,
         category_id: item.category_id,
+        status: item.status || 'selling',
         image_url: images.length > 0 ? images[0].url : null,
         images,
         tags: item.item_tags ? item.item_tags.map(tag => tag.tag) : [],
@@ -220,6 +250,7 @@ export const getItemDetails = async (itemId) => {
         description,
         price,
         seller_id,
+        status,
         created_at,
         category_id,
         categories (
@@ -251,6 +282,7 @@ export const getItemDetails = async (itemId) => {
       price: item.price,
       category: item.categories?.name || null,
       category_id: item.category_id,
+      status: item.status || 'selling',
       seller: {
         id: item.seller_id,
         display_name: item.users?.display_name || 'Seller',
@@ -300,7 +332,8 @@ export const createItem = async (itemData) => {
           description,
           price,
           category_id,
-          seller_id: user.id
+          seller_id: user.id,
+          status: 'selling'
         }
       ])
       .select()
@@ -333,6 +366,7 @@ export const createItem = async (itemData) => {
         title: newItem.title,
         description: newItem.description,
         price: newItem.price,
+        status: newItem.status,
         seller_id: user.id, 
         created_at: newItem.created_at
       }
@@ -358,82 +392,41 @@ export const updateItem = async (itemId, updates) => {
       };
     }
 
+    // Check if user owns the item
     const { data: item, error: itemError } = await supabase
       .from('items')
       .select('seller_id')
       .eq('id', itemId)
       .single();
 
-    if (itemError) throw itemError;
-
-    // Check if user is admin
-    const { data: userProfile } = await supabase
-      .from('users')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
-    const isAdmin = userProfile?.is_admin || false;
-
-    if (item.seller_id !== user.id && !isAdmin) {
-      return {
-        res_code: 403,
-        res_msg: 'No permission to modify this item'
-      };
-    }
-
-    // Filter out undefined values from updates
-    const cleanUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([_, value]) => value !== undefined)
-    );
-
-    // Get current item data before update
-    const { data: currentItem, error: currentError } = await supabase
-      .from('items')
-      .select('id, title, description, price')
-      .eq('id', itemId)
-      .maybeSingle();
-
-    if (currentError) throw currentError;
-    if (!currentItem) {
+    if (itemError) {
       return {
         res_code: 404,
         res_msg: 'Item not found'
       };
     }
 
-    const { error: updateError } = await supabase
-      .from('items')
-      .update(cleanUpdates)
-      .eq('id', itemId);
-
-    if (updateError) throw updateError;
-
-    // Fetch updated item from database to ensure consistency
-    const { data: updatedItem, error: fetchError } = await supabase
-      .from('items')
-      .select('id, title, description, price')
-      .eq('id', itemId)
-      .maybeSingle();
-
-    if (fetchError) throw fetchError;
-
-    if (!updatedItem) {
+    if (item.seller_id !== user.id) {
       return {
-        res_code: 404,
-        res_msg: 'Item not found after update'
+        res_code: 403,
+        res_msg: 'You can only update your own items'
       };
     }
+
+    // Update item
+    const { data: updatedItem, error: updateError } = await supabase
+      .from('items')
+      .update(updates)
+      .eq('id', itemId)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
 
     return {
       res_code: 200,
       res_msg: 'Item updated successfully',
-      item: {
-        id: updatedItem.id,
-        title: updatedItem.title,
-        description: updatedItem.description,
-        price: updatedItem.price
-      }
+      item: updatedItem
     };
   } catch (error) {
     return {
@@ -456,45 +449,281 @@ export const deleteItem = async (itemId) => {
       };
     }
 
+    // Check if user owns the item or is admin
     const { data: item, error: itemError } = await supabase
       .from('items')
       .select('seller_id')
       .eq('id', itemId)
       .single();
 
-    if (itemError) throw itemError;
+    if (itemError) {
+      return {
+        res_code: 404,
+        res_msg: 'Item not found'
+      };
+    }
 
     // Check if user is admin
-    const { data: userProfile } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('is_admin')
       .eq('id', user.id)
       .single();
 
-    const isAdmin = userProfile?.is_admin || false;
+    const isAdmin = userData?.is_admin || false;
 
     if (item.seller_id !== user.id && !isAdmin) {
       return {
         res_code: 403,
-        res_msg: 'No permission to delete this item'
+        res_msg: 'You can only delete your own items'
       };
     }
 
-    await supabase
-      .from('item_images')
+    // First, update chat rooms to remove item reference, then delete messages and chat rooms
+    const { data: chatRooms, error: chatRoomsError } = await supabase
+      .from('chat_rooms')
+      .select('id')
+      .eq('item_id', itemId);
+
+    if (!chatRoomsError && chatRooms && chatRooms.length > 0) {
+      const chatRoomIds = chatRooms.map(room => room.id);
+      
+      // Delete messages in these chat rooms first
+      const { error: messagesDeleteError } = await supabase
+        .from('messages')
+        .delete()
+        .in('chat_room_id', chatRoomIds);
+
+      if (messagesDeleteError) {
+        console.warn('Error deleting messages:', messagesDeleteError);
+      }
+
+      // Set item_id to null in chat rooms first to avoid foreign key constraint
+      const { error: updateError } = await supabase
+        .from('chat_rooms')
+        .update({ item_id: null })
+        .eq('item_id', itemId);
+
+      if (updateError) {
+        console.warn('Error updating chat rooms:', updateError);
+      }
+
+      // Then delete chat rooms
+      const { error: chatRoomsDeleteError } = await supabase
+        .from('chat_rooms')
+        .delete()
+        .in('id', chatRoomIds);
+
+      if (chatRoomsDeleteError) {
+        console.warn('Error deleting chat rooms:', chatRoomsDeleteError);
+      }
+    }
+
+    // Delete related reviews with error handling
+    const { error: reviewsDeleteError } = await supabase
+      .from('reviews')
       .delete()
       .eq('item_id', itemId);
 
+    if (reviewsDeleteError) {
+      console.warn('Error deleting reviews:', reviewsDeleteError);
+    }
+
+    // Delete related wishlists with error handling
+    const { error: wishlistsDeleteError } = await supabase
+      .from('wishlists')
+      .delete()
+      .eq('item_id', itemId);
+
+    if (wishlistsDeleteError) {
+      console.warn('Error deleting wishlists:', wishlistsDeleteError);
+    }
+
+    // Delete item images from storage and database
+    const { data: images } = await supabase
+      .from('item_images')
+      .select('url')
+      .eq('item_id', itemId);
+
+    if (images && images.length > 0) {
+      // Delete from storage
+      const imagePaths = images.map(img => img.url);
+      try {
+        await supabase.storage
+          .from('items')
+          .remove(imagePaths);
+      } catch (storageError) {
+        console.warn('Failed to delete some images from storage:', storageError);
+      }
+
+      // Delete from database
+      await supabase
+        .from('item_images')
+        .delete()
+        .eq('item_id', itemId);
+    }
+
+    // Delete item tags with error handling
+    const { error: tagsDeleteError } = await supabase
+      .from('item_tags')
+      .delete()
+      .eq('item_id', itemId);
+
+    if (tagsDeleteError) {
+      console.warn('Error deleting item tags:', tagsDeleteError);
+    }
+
+    // Finally, delete the item
     const { error: deleteError } = await supabase
       .from('items')
       .delete()
       .eq('id', itemId);
 
-    if (deleteError) throw deleteError;
+    if (deleteError) {
+      console.error('Final item deletion error:', deleteError);
+      throw deleteError;
+    }
 
     return {
       res_code: 200,
-      res_msg: 'Item deleted successfully'
+      res_msg: 'Item and all related data deleted successfully'
+    };
+  } catch (error) {
+    return {
+      res_code: 400,
+      res_msg: error.message,
+      error: error
+    };
+  }
+};
+
+export const getUserItems = async (userId, options = {}) => {
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError) throw authError;
+
+    if (!user) {
+      return {
+        res_code: 401,
+        res_msg: 'Authentication required'
+      };
+    }
+
+    const { page = 1, limit = 20, sort = 'newest' } = options;
+    const offset = (page - 1) * limit;
+
+    const { data: items, error: itemsError, count } = await supabase
+      .from('items')
+      .select(`
+        id, title, description, price, status, created_at,
+        categories (id, name),
+        item_images (id, url)
+      `, { count: 'exact' })
+      .eq('seller_id', userId)
+      .order('created_at', { ascending: sort === 'oldest' })
+      .range(offset, offset + limit - 1);
+
+    if (itemsError) throw itemsError;
+
+    const transformedItems = items.map(item => ({
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      price: item.price,
+      status: item.status || 'selling',
+      category: item.categories ? {
+        id: item.categories.id,
+        name: item.categories.name
+      } : null,
+      images: item.item_images ? item.item_images.map(img => ({
+        id: img.id,
+        url: toPublicImageUrl(img.url)
+      })) : [],
+      created_at: item.created_at
+    }));
+
+    const totalPages = Math.ceil(count / limit);
+
+    return {
+      res_code: 200,
+      res_msg: 'User items retrieved successfully',
+      items: transformedItems,
+      pagination: {
+        current_page: page,
+        total_pages: totalPages,
+        total_count: count,
+        has_next: page < totalPages,
+        has_prev: page > 1
+      },
+      meta: {
+        sort: sort,
+        filters: {}
+      }
+    };
+  } catch (error) {
+    return {
+      res_code: 400,
+      res_msg: error.message,
+      error: error
+    };
+  }
+};
+
+export const addItemImage = async (itemId, imageUrl, sortOrder = 0) => {
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError) throw authError;
+
+    if (!user) {
+      return {
+        res_code: 401,
+        res_msg: 'Authentication required'
+      };
+    }
+
+    // Check if user owns the item
+    const { data: item, error: itemError } = await supabase
+      .from('items')
+      .select('seller_id')
+      .eq('id', itemId)
+      .single();
+
+    if (itemError) {
+      return {
+        res_code: 404,
+        res_msg: 'Item not found'
+      };
+    }
+
+    if (item.seller_id !== user.id) {
+      return {
+        res_code: 403,
+        res_msg: 'You can only add images to your own items'
+      };
+    }
+
+    const { data: newImage, error: imageError } = await supabase
+      .from('item_images')
+      .insert([
+        {
+          item_id: itemId,
+          url: imageUrl,
+          sort_order: sortOrder
+        }
+      ])
+      .select()
+      .single();
+
+    if (imageError) throw imageError;
+
+    return {
+      res_code: 201,
+      res_msg: 'Image added successfully',
+      image: {
+        id: newImage.id,
+        url: toPublicImageUrl(newImage.url),
+        sort_order: newImage.sort_order
+      }
     };
   } catch (error) {
     return {
@@ -507,149 +736,62 @@ export const deleteItem = async (itemId) => {
 
 export const deleteItemImage = async (imageId) => {
   try {
-    console.log('[deleteItemImage] Starting deletion for imageId:', imageId);
-    
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError) {
-      console.error('[deleteItemImage] Auth error:', authError);
-      throw authError;
-    }
+    if (authError) throw authError;
 
     if (!user) {
-      console.error('[deleteItemImage] No user found');
       return {
         res_code: 401,
         res_msg: 'Authentication required'
       };
     }
 
-    console.log('[deleteItemImage] User authenticated:', user.id);
-
-    // Get item_id from image to check ownership
-    const { data: imageData, error: imageError } = await supabase
+    // Get image info and check ownership
+    const { data: image, error: imageError } = await supabase
       .from('item_images')
-      .select('item_id')
+      .select(`
+        id, url, item_id,
+        items!inner (seller_id)
+      `)
       .eq('id', imageId)
-      .maybeSingle();
+      .single();
 
     if (imageError) {
-      console.error('[deleteItemImage] Error fetching image:', imageError);
-      throw imageError;
-    }
-    
-    if (!imageData) {
-      console.error('[deleteItemImage] Image not found:', imageId);
       return {
         res_code: 404,
         res_msg: 'Image not found'
       };
     }
 
-    console.log('[deleteItemImage] Image found, item_id:', imageData.item_id);
-
-    // Get item to check ownership
-    const { data: itemData, error: itemError } = await supabase
-      .from('items')
-      .select('seller_id')
-      .eq('id', imageData.item_id)
-      .maybeSingle();
-
-    if (itemError) {
-      console.error('[deleteItemImage] Error fetching item:', itemError);
-      throw itemError;
-    }
-    
-    if (!itemData) {
-      console.error('[deleteItemImage] Item not found:', imageData.item_id);
-      return {
-        res_code: 404,
-        res_msg: 'Item not found'
-      };
-    }
-
-    console.log('[deleteItemImage] Item found, seller_id:', itemData.seller_id);
-
-    // Check if user is admin
-    const { data: userProfile, error: profileError } = await supabase
-      .from('users')
-      .select('is_admin')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    if (profileError) {
-      console.error('[deleteItemImage] Error fetching user profile:', profileError);
-      throw profileError;
-    }
-    
-    const isAdmin = userProfile?.is_admin || false;
-    const sellerId = itemData.seller_id;
-
-    console.log('[deleteItemImage] Permission check:', { 
-      userId: user.id, 
-      sellerId, 
-      isAdmin, 
-      hasPermission: sellerId === user.id || isAdmin 
-    });
-
-    if (sellerId !== user.id && !isAdmin) {
-      console.error('[deleteItemImage] Permission denied');
+    if (image.items.seller_id !== user.id) {
       return {
         res_code: 403,
-        res_msg: 'No permission to delete this image'
+        res_msg: 'You can only delete images from your own items'
       };
     }
 
-    console.log('[deleteItemImage] Attempting to delete image from database...');
-    const { data: deleteData, error: deleteError } = await supabase
+    // Delete from storage
+    try {
+      await supabase.storage
+        .from('item-images')
+        .remove([image.url]);
+    } catch (storageError) {
+      console.warn('Failed to delete from storage:', storageError);
+    }
+
+    // Delete from database
+    const { error: deleteError } = await supabase
       .from('item_images')
       .delete()
-      .eq('id', imageId)
-      .select();
+      .eq('id', imageId);
 
-    if (deleteError) {
-      console.error('[deleteItemImage] Delete error:', deleteError);
-      throw deleteError;
-    }
+    if (deleteError) throw deleteError;
 
-    console.log('[deleteItemImage] Delete result:', deleteData);
-
-    // Check if any rows were actually deleted
-    if (!deleteData || deleteData.length === 0) {
-      console.error('[deleteItemImage] No rows deleted - likely RLS policy issue');
-      return {
-        res_code: 403,
-        res_msg: 'Delete failed: Row Level Security (RLS) policy is blocking the deletion. Please check your Supabase RLS policies for the item_images table.'
-      };
-    }
-
-    console.log('[deleteItemImage] Successfully deleted', deleteData.length, 'row(s)');
-    
-    // Verify deletion by checking if image still exists
-    const { data: verifyData, error: verifyError } = await supabase
-      .from('item_images')
-      .select('id')
-      .eq('id', imageId)
-      .maybeSingle();
-
-    if (verifyError && verifyError.code !== 'PGRST116') {
-      console.warn('[deleteItemImage] Verify check error:', verifyError);
-    }
-
-    if (verifyData) {
-      console.error('[deleteItemImage] Image still exists after deletion!');
-      return {
-        res_code: 500,
-        res_msg: 'Image deletion may have failed. Please refresh the page.'
-      };
-    }
-
-    console.log('[deleteItemImage] Image successfully deleted from database');
     return {
       res_code: 200,
       res_msg: 'Image deleted successfully'
     };
   } catch (error) {
-    console.error('[deleteItemImage] Unexpected error:', error);
     return {
       res_code: 400,
       res_msg: error.message || 'Failed to delete image',
@@ -711,6 +853,78 @@ export const getItemReviews = async (itemId, options = {}) => {
         sort: sort,
         filters: {}
       }
+    };
+  } catch (error) {
+    return {
+      res_code: 400,
+      res_msg: error.message,
+      error: error
+    };
+  }
+};
+
+export const updateItemStatus = async (itemId, status) => {
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError) throw authError;
+
+    if (!user) {
+      return {
+        res_code: 401,
+        res_msg: 'Authentication required'
+      };
+    }
+
+    // Validate status
+    const validStatuses = ['selling', 'in_transaction', 'sold'];
+    if (!validStatuses.includes(status)) {
+      return {
+        res_code: 400,
+        res_msg: 'Invalid status. Must be one of: selling, in_transaction, sold'
+      };
+    }
+
+    // Check if user owns the item or is admin
+    const { data: item, error: itemError } = await supabase
+      .from('items')
+      .select('seller_id')
+      .eq('id', itemId)
+      .single();
+
+    if (itemError) {
+      return {
+        res_code: 404,
+        res_msg: 'Item not found'
+      };
+    }
+
+    // Check if user is admin
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single();
+
+    const isAdmin = userData?.is_admin || false;
+
+    if (item.seller_id !== user.id && !isAdmin) {
+      return {
+        res_code: 403,
+        res_msg: 'You can only update your own items'
+      };
+    }
+
+    // Update item status
+    const { error: updateError } = await supabase
+      .from('items')
+      .update({ status })
+      .eq('id', itemId);
+
+    if (updateError) throw updateError;
+
+    return {
+      res_code: 200,
+      res_msg: 'Item status updated successfully'
     };
   } catch (error) {
     return {

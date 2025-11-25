@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
 import { Link } from 'react-router-dom'
 import { createChatRoomFromItem, getItemDetails, recordItemView, addToWishlist, removeFromWishlist, isItemInWishlist, updateItem, deleteItem, deleteItemImage } from "../../lib/api";
+import StatusBadge from "../../components/StatusBadge";
 
 import Navbar from "../Navbar";
 import "./ItemDetail.css";
@@ -478,7 +479,7 @@ function ItemDetail() {
         sort_order: (item.images?.length || 0) + index
       }));
 
-      const { data: insertedImages, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('item_images')
         .insert(imageData)
         .select('id, url');
@@ -601,7 +602,10 @@ function ItemDetail() {
           {/* Item Details */}
           <div className="item-main">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <h2 className="item-title">{item.title}</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: 1 }}>
+                <h2 className="item-title">{item.title}</h2>
+                <StatusBadge status={item.status} />
+              </div>
               {(item?.seller_id && currentUserId && String(item.seller_id) === String(currentUserId)) || isAdmin ? (
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button 
@@ -687,7 +691,7 @@ function ItemDetail() {
                       <img
                         key={img.id || index}
                         src={img.url}
-                        alt={`${item.title} - Image ${index + 1}`}
+                        alt={`${item.title} ${index + 1}`}
                         className={`item-thumbnail ${selectedImageIndex === index ? 'active' : ''}`}
                         onClick={() => {
                           if (!isEditing) {
@@ -844,7 +848,7 @@ function ItemDetail() {
               </>
             )}
             <p>
-              <Link to='../../review'>
+              <Link to={`/review/${item.seller_id || item.seller?.id}`}>
                 <b>Seller:</b>{" "}
               {item.seller_display_name ||
                 item.seller?.display_name ||

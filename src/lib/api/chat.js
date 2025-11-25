@@ -151,7 +151,7 @@ export const createChatRoom = async (itemId) => {
 
     const { data: item, error: itemError } = await supabase
       .from('items')
-      .select('seller_id')
+      .select('seller_id, status')
       .eq('id', itemId)
       .single();
 
@@ -204,6 +204,14 @@ export const createChatRoom = async (itemId) => {
       .single();
 
     if (createError) throw createError;
+
+    // Update item status to 'in_transaction' if it's currently 'selling'
+    if (item.status === 'selling') {
+      await supabase
+        .from('items')
+        .update({ status: 'in_transaction' })
+        .eq('id', itemId);
+    }
 
     // Broadcast to seller about new chat
     try {
@@ -367,6 +375,12 @@ export const completeTransaction = async (chatRoomId, rating, comment = '') => {
         })
         .eq('id', revieweeId);
     }
+
+    // Update item status to 'sold'
+    await supabase
+      .from('items')
+      .update({ status: 'sold' })
+      .eq('id', chatRoom.item_id);
 
     return {
       res_code: 200,

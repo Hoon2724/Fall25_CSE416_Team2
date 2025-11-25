@@ -1,5 +1,6 @@
 // src/Main_Page/Market_Page/Market.js
 import { useNavigate } from "react-router-dom";
+import StatusBadge from "../../components/StatusBadge";
 import "./Market.css";
 
 function Market({ items = [], loading, errorMsg }) {
@@ -45,7 +46,10 @@ function Market({ items = [], loading, errorMsg }) {
             </div>
 
             <div className="item-info">
-              <div className="item-name">{item.title}</div>
+              <div className="item-header">
+                <div className="item-name">{item.title}</div>
+                <StatusBadge status={item.status} />
+              </div>
               <div className="item-price">
                 {item.price != null ? `${item.price}₩` : ""}
               </div>

@@ -21,6 +21,27 @@ export const createReview = async (reviewData) => {
       };
     }
 
+    // Check if the item belongs to the current user
+    const { data: item, error: itemError } = await supabase
+      .from('items')
+      .select('seller_id')
+      .eq('id', item_id)
+      .single();
+
+    if (itemError) {
+      return {
+        res_code: 400,
+        res_msg: 'Item not found'
+      };
+    }
+
+    if (item.seller_id === user.id) {
+      return {
+        res_code: 400,
+        res_msg: 'You cannot leave a review for your own item'
+      };
+    }
+
     // Validate rating: 1-5 range, 0.5 increments
     if (rating < 1 || rating > 5) {
       return {
@@ -38,7 +59,7 @@ export const createReview = async (reviewData) => {
       };
     }
 
-    const { data: existingReview, error: checkError } = await supabase
+    const { data: existingReview } = await supabase
       .from('reviews')
       .select('id')
       .eq('reviewer_id', user.id)
@@ -117,6 +138,9 @@ export const createReview = async (reviewData) => {
 
 export const getUserReviews = async (userId) => {
   try {
+    // First get reviews
+    console.log('Searching for reviews with reviewer_id:', userId); // 디버깅용
+    
     const { data: reviews, error: reviewsError } = await supabase
       .from('reviews')
       .select(`
@@ -124,36 +148,79 @@ export const getUserReviews = async (userId) => {
         rating,
         comment,
         created_at,
-        items (
-          id,
-          title
-        ),
-        users!reviews_reviewer_id_fkey (
-          id,
-          display_name,
-          profile_image_url
-        )
+        reviewer_id,
+        reviewee_id,
+        item_id
       `)
-      .eq('reviewee_id', userId)
+      .eq('reviewer_id', userId)
       .order('created_at', { ascending: false });
 
     if (reviewsError) throw reviewsError;
 
-    const transformedReviews = reviews.map(review => ({
-      id: review.id,
-      rating: review.rating,
-      comment: review.comment,
-      created_at: review.created_at,
-      item: review.items ? {
-        id: review.items.id,
-        title: review.items.title
-      } : null,
-      reviewer: {
-        id: review.users.id,
-        display_name: review.users.display_name,
-        profile_image_url: review.users.profile_image_url
+    console.log('Raw reviews data:', reviews); // 디버깅용
+    
+    // 디버깅: 모든 리뷰 확인
+    const { data: allReviews } = await supabase
+      .from('reviews')
+      .select('id, reviewer_id, reviewee_id, item_id');
+    console.log('All reviews in database:', allReviews);
+
+    // Get unique reviewee IDs and item IDs (since we're showing reviews I wrote)
+    const revieweeIds = [...new Set(reviews.map(r => r.reviewee_id).filter(Boolean))];
+    const itemIds = [...new Set(reviews.map(r => r.item_id).filter(Boolean))];
+
+    // Get reviewee information (people I reviewed)
+    let revieweesMap = new Map();
+    if (revieweeIds.length > 0) {
+      const { data: reviewees, error: revieweesError } = await supabase
+        .from('users')
+        .select('id, display_name, profile_image_url')
+        .in('id', revieweeIds);
+
+      if (!revieweesError && reviewees) {
+        revieweesMap = new Map(reviewees.map(user => [user.id, user]));
       }
-    }));
+    }
+
+    // Get item information
+    let itemsMap = new Map();
+    if (itemIds.length > 0) {
+      const { data: items, error: itemsError } = await supabase
+        .from('items')
+        .select('id, title')
+        .in('id', itemIds);
+
+      if (!itemsError && items) {
+        itemsMap = new Map(items.map(item => [item.id, item]));
+      }
+    }
+
+    const transformedReviews = reviews.map(review => {
+      const reviewee = revieweesMap.get(review.reviewee_id);
+      const item = itemsMap.get(review.item_id);
+
+      return {
+        id: review.id,
+        rating: review.rating,
+        comment: review.comment,
+        created_at: review.created_at,
+        item: item ? {
+          id: item.id,
+          title: item.title
+        } : null,
+        reviewee: reviewee ? {
+          id: reviewee.id,
+          display_name: reviewee.display_name,
+          profile_image_url: reviewee.profile_image_url
+        } : {
+          id: review.reviewee_id,
+          display_name: 'Unknown User',
+          profile_image_url: null
+        }
+      };
+    });
+
+    console.log('Transformed reviews:', transformedReviews); // 디버깅용
 
     return {
       res_code: 200,
@@ -161,6 +228,7 @@ export const getUserReviews = async (userId) => {
       reviews: transformedReviews
     };
   } catch (error) {
+    console.error('Error in getUserReviews:', error);
     return {
       res_code: 400,
       res_msg: error.message,
@@ -204,6 +272,67 @@ export const getItemReviews = async (itemId) => {
     return {
       res_code: 200,
       res_msg: 'Item reviews retrieved successfully',
+      reviews: transformedReviews
+    };
+  } catch (error) {
+    return {
+      res_code: 400,
+      res_msg: error.message,
+      error: error
+    };
+  }
+};
+
+export const getUserWrittenReviews = async (userId) => {
+  try {
+    const { data: reviews, error: reviewsError } = await supabase
+      .from('reviews')
+      .select(`
+        id,
+        rating,
+        comment,
+        created_at,
+        items (
+          id,
+          title,
+          item_images (
+            id,
+            url
+          )
+        ),
+        users!reviews_reviewee_id_fkey (
+          id,
+          display_name,
+          profile_image_url
+        )
+      `)
+      .eq('reviewer_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (reviewsError) throw reviewsError;
+
+    const transformedReviews = reviews.map(review => ({
+      id: review.id,
+      rating: review.rating,
+      comment: review.comment,
+      created_at: review.created_at,
+      item: review.items ? {
+        id: review.items.id,
+        title: review.items.title,
+        image_url: review.items.item_images && review.items.item_images.length > 0 
+          ? review.items.item_images[0].url 
+          : null
+      } : null,
+      reviewee: {
+        id: review.users.id,
+        display_name: review.users.display_name,
+        profile_image_url: review.users.profile_image_url
+      }
+    }));
+
+    return {
+      res_code: 200,
+      res_msg: 'User written reviews retrieved successfully',
       reviews: transformedReviews
     };
   } catch (error) {

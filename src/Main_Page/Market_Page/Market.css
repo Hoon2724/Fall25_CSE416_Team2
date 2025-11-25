@@ -99,11 +99,20 @@
         justify-content: center;
     }
     
+    .market-item .item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+        gap: 10px;
+    }
+
     .market-item .item-name {
         font-size: 1.2rem;
         font-weight: 600;
-        margin: 0 0 8px 0;
+        margin: 0;
         color: black;
+        flex: 1;
     }
     
     .market-item .item-price {
@@ -161,11 +170,20 @@
         margin-left: 10px;
     }
     
+    .market-item .item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 10px;
+        gap: 15px;
+    }
+
     .market-item .item-name {
         font-size: 1.7rem;
         font-weight: 600;
-        margin: 0 0 10px 0;
+        margin: 0;
         color: black;
+        flex: 1;
     }
     
     .market-item .item-price {

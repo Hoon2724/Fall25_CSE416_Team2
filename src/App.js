@@ -80,7 +80,7 @@ function App() {
         <Route path='/admin/posts' element={<ProtectedRoute><AdminPosts /></ProtectedRoute>} />
 
         {/* -------- Review Pages -------- */}
-        <Route path='/review' element={<ProtectedRoute><ReviewPage /></ProtectedRoute>} />
+        <Route path='/review/:revieweeId' element={<ProtectedRoute><ReviewPage /></ProtectedRoute>} />
 
       </Routes>
     </BrowserRouter>
