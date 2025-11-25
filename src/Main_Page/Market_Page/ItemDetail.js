@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
+import { Link } from 'react-router-dom'
+import { createChatRoomFromItem, getItemDetails, recordItemView, addToWishlist, removeFromWishlist, isItemInWishlist, updateItem, deleteItem, deleteItemImage } from "../../lib/api";
+
 import Navbar from "../Navbar";
 import "./ItemDetail.css";
-import { createChatRoomFromItem, getItemDetails, recordItemView, addToWishlist, removeFromWishlist, isItemInWishlist, updateItem, deleteItem, deleteItemImage } from "../../lib/api";
 
 function ItemDetail() {
   const { id } = useParams(); // Get item ID from URL
@@ -842,7 +844,8 @@ function ItemDetail() {
               </>
             )}
             <p>
-              <b>Seller:</b>{" "}
+              <Link to='../../review'>
+                <b>Seller:</b>{" "}
               {item.seller_display_name ||
                 item.seller?.display_name ||
                 item.seller_name ||
@@ -858,6 +861,7 @@ function ItemDetail() {
                     0
                   }/5.0)`
                 : null}
+              </Link>
             </p>
             <p className="itemTags"><b>Tags:</b> {item.tags?.join(", ") || "N/A"}</p>
             <div className="interact-container row">

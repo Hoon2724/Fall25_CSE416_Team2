@@ -28,6 +28,7 @@ import ItemDetail from './Main_Page/Market_Page/ItemDetail.js'; // ✅ 새로 �
 import Profile from './Main_Page/Profile_Page/Profile.js';
 import ProfileEdit from './Main_Page/Profile_Page/ProfileEdit.js';
 import OptionPage from './Main_Page/Profile_Page/OptionPage.js';
+import ReviewPage from './Main_Page/Review_Page/ReviewPage.js'
 
 // Admin Pages
 import Admin from './Main_Page/Admin_Page/Admin.js';
@@ -77,6 +78,9 @@ function App() {
         <Route path='/admin/users' element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
         <Route path='/admin/items' element={<ProtectedRoute><AdminItems /></ProtectedRoute>} />
         <Route path='/admin/posts' element={<ProtectedRoute><AdminPosts /></ProtectedRoute>} />
+
+        {/* -------- Review Pages -------- */}
+        <Route path='/review' element={<ProtectedRoute><ReviewPage /></ProtectedRoute>} />
 
       </Routes>
     </BrowserRouter>

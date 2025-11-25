@@ -1,0 +1,22 @@
+.adminItemsCtn {
+  padding: 10px;
+}
+
+.adminItemsTitle {
+  font-size: 36px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.adminItemsList {
+    border-top-style: solid;
+    border-color: black;
+    overflow: clip;
+}
+.adminItemsItem {
+    padding: 10px;
+
+    border-bottom-style: solid;
+    border-width: 2px;
+    border-color: gray;
+}
