@@ -866,29 +866,31 @@ function ItemDetail() {
                 : null}
             </p>
             <p className="itemTags"><b>Tags:</b> {item.tags?.join(", ") || "N/A"}</p>
-            <div className="interact-container row">
-              <button
-                type="button"
-                className="item-favorite col-lg-1"
-                onClick={handleToggleFavorite}
-                disabled={favLoading}
-                style={{ cursor: favLoading ? 'not-allowed' : 'pointer' }}
-              >
-                <div className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} id="fav"></div>
-                <div>{isFavorite ? 'Favorited' : 'Favorite'}</div>
-              </button>
-            {item?.seller_id && currentUserId && String(item.seller_id) !== String(currentUserId) ? (
-              <button
-                className="item-contact col-lg-1"
-                onClick={handleContactSeller}
-                disabled={contacting}
-                type="button"
-              >
-                <div className="bi bi-chat-left-dots-fill"></div>
-                <div>{contacting ? "Contacting..." : "Contact"}</div>
-              </button>
+            {item.status !== "sold" ? (
+              <div className="interact-container row">
+                <button
+                  type="button"
+                  className="item-favorite col-lg-1"
+                  onClick={handleToggleFavorite}
+                  disabled={favLoading}
+                  style={{ cursor: favLoading ? 'not-allowed' : 'pointer' }}
+                >
+                  <div className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}`} id="fav"></div>
+                  <div>{isFavorite ? 'Favorited' : 'Favorite'}</div>
+                </button>
+                {item?.seller_id && currentUserId && String(item.seller_id) !== String(currentUserId) ? (
+                    <button
+                      className="item-contact col-lg-1"
+                      onClick={handleContactSeller}
+                      disabled={contacting}
+                      type="button"
+                    >
+                      <div className="bi bi-chat-left-dots-fill"></div>
+                      <div>{contacting ? "Contacting..." : "Contact"}</div>
+                    </button>
+                  ) : null}
+              </div>
             ) : null}
-            </div>
           </div>
 
           {/* Similar Items Recommendation */}
