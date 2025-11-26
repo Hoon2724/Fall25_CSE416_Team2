@@ -99,7 +99,7 @@ function ReviewList({ reviewee }) {
                         />
                       )}
                       <div className="reviewer-details">
-                        <div className="reviewer-name">{review.reviewer?.display_name || 'Anonymous'}</div>
+                        <div className="reviewer-name">{review.reviewee?.display_name || 'Anonymous'}</div>
                         <div className="review-date">{formatDate(review.created_at)}</div>
                       </div>
                     </div>
