@@ -71,7 +71,7 @@ function OptionPage() {
 
   const getTitle = () => {
         if (isPosts) return 'My Posts';
-        if (isWishlists) return 'My Favorite Posts';
+        if (isWishlists) return 'My Favorite Items';
         return "Error";
     };
 

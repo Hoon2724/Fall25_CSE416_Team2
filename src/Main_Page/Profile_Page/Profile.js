@@ -128,7 +128,7 @@ function Profile() {
                 </li>
                 <li className="optionItem">
                     <Link to='../option/favorite'>
-                        <div className="option favPosts">My Favorite Posts</div>
+                        <div className="option favPosts">My Favorite Items</div>
                     </Link>
                 </li>
                 <li className="optionItem">
