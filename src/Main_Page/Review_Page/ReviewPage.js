@@ -37,10 +37,10 @@ function ReviewPage() {
       <Navbar />
 
       <div className="reviewPageCtn">
-        <div className="reviewReturnBtn">
+        <div className="returnBtn">
           <Link to='../home'>
             <span className="bi bi-arrow-left"></span>
-            <div className="returnDesc">Return</div>
+            <span className="returnDesc">Return</span>
           </Link>
         </div>
         <div className="reviewPageTitle">Reviews of {reviewee?.display_name || 'User'}</div>
