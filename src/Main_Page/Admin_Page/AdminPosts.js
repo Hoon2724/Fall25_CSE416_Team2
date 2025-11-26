@@ -41,14 +41,19 @@ function AdminPosts() {
     }
 
     try {
+      console.log('Attempting to delete post:', postId);
       const res = await deletePostByAdmin(postId);
+      console.log('Delete response:', res);
       if (res.res_code === 200) {
+        alert('포스트가 성공적으로 삭제되었습니다.');
         loadPosts();
       } else {
+        console.error('Delete failed:', res);
         alert(res.res_msg || 'Failed to delete post');
       }
     } catch (e) {
-      alert('Network error');
+      console.error('Delete error:', e);
+      alert('Network error: ' + e.message);
     }
   };
 

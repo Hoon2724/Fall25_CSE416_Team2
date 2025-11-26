@@ -249,8 +249,11 @@ export const getAllPosts = async (options = {}) => {
 // 포스트 삭제 (관리자용)
 export const deletePostByAdmin = async (postId) => {
   try {
+    console.log('deletePostByAdmin called with postId:', postId);
     const adminCheck = await checkAdminPermission();
+    console.log('Admin check result:', adminCheck);
     if (!adminCheck.isAdmin) {
+      console.log('Admin permission denied');
       return {
         res_code: 403,
         res_msg: adminCheck.error || 'Admin permission required'
@@ -305,11 +308,13 @@ export const deletePostByAdmin = async (postId) => {
       }
     }
 
+    console.log('Post deleted successfully');
     return {
       res_code: 200,
       res_msg: 'Post deleted successfully'
     };
   } catch (error) {
+    console.error('Error in deletePostByAdmin:', error);
     return {
       res_code: 400,
       res_msg: error.message,
