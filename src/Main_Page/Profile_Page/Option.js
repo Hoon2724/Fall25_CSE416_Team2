@@ -40,6 +40,7 @@ function Option(props) {
                                 id: item.id,
                                 title: item.title,
                                 price: item.price,
+                                status: item.status,
                                 image: (item.item_images && item.item_images[0] && item.item_images[0].url) || null
                             }));
                         setItems(transformed);

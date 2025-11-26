@@ -51,6 +51,7 @@ function OptionPage() {
                             id: w.items.id,
                             title: w.items.title,
                             price: w.items.price,
+                            status: w.items.status,
                             image: (w.items.item_images && w.items.item_images[0] && w.items.item_images[0].url) || null
                         }));
                         setItems(transformed);

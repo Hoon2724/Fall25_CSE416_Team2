@@ -178,7 +178,7 @@ export const getUserItems = async (userId, options = {}) => {
     const { data: items, error: itemsError } = await supabase
       .from('items')
       .select(`
-        id, title, price, created_at,
+        id, title, price, status, created_at,
         categories(id, name),
         item_images(id, url)
       `)
@@ -232,7 +232,7 @@ export const getUserWishlists = async (userId, options = {}) => {
       .from('wishlists')
       .select(`
         id, created_at,
-        items!inner(id, title, price, item_images(id, url))
+        items!inner(id, title, price, status, item_images(id, url))
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: sort === 'oldest' })

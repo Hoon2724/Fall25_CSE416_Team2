@@ -10,7 +10,8 @@ import {
     markMessagesAsRead,
     subscribeChatRooms,
     createMessageChannel,
-    sendMessageHybrid
+    sendMessageHybrid,
+    deleteChatRoom
 } from '../../lib/api';
 import { supabase } from '../../lib/supabaseClient';
 import './ChattingPage.css';
@@ -432,6 +433,29 @@ function ChattingPage() {
     // API already returns them in this order, so no need to re-sort
     const sortedChatRooms = chatRooms;
 
+    const handleDeleteChat = async (chatRoomId) => {
+        try {
+            const result = await deleteChatRoom(chatRoomId);
+            if (result.res_code === 200) {
+                // Remove from chat rooms list
+                setChatRooms(prevRooms => prevRooms.filter(room => room.id !== chatRoomId));
+                
+                // If the deleted chat was selected, clear selection
+                if (selectedChat && selectedChat.id === chatRoomId) {
+                    setSelectedChat(null);
+                    setMessages([]);
+                }
+                
+                alert('채팅방이 성공적으로 삭제되었습니다.');
+            } else {
+                alert(result.res_msg || '채팅방 삭제에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error deleting chat room:', error);
+            alert('채팅방 삭제 중 오류가 발생했습니다.');
+        }
+    };
+
     return (
         <div className="chatting-page-wrapper">
             <Navbar />
@@ -443,6 +467,7 @@ function ChattingPage() {
                         onSelectChat={setSelectedChat}
                         loading={chatRoomsLoading}
                         error={chatRoomsError}
+                        onDeleteChat={handleDeleteChat}
                     />
                 </div>
                 <div className="chatroom-panel">

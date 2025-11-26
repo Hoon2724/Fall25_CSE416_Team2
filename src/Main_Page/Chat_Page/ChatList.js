@@ -1,4 +1,4 @@
-function ChatList({ chats, selectedChat, onSelectChat, loading, error }) {
+function ChatList({ chats, selectedChat, onSelectChat, loading, error, onDeleteChat }) {
     return (
         <div className="chat-list-container">
             <div className="chat-list-header">
@@ -30,7 +30,7 @@ function ChatList({ chats, selectedChat, onSelectChat, loading, error }) {
                             <span style={{
                                 position: 'absolute',
                                 top: 8,
-                                right: 8,
+                                right: 30,
                                 backgroundColor: 'red',
                                 color: 'white',
                                 borderRadius: '50%',
@@ -44,6 +44,32 @@ function ChatList({ chats, selectedChat, onSelectChat, loading, error }) {
                             }}>
                                 {chat.unreadCount > 9 ? '9+' : chat.unreadCount}
                             </span>
+                        )}
+                        {onDeleteChat && (
+                            <button
+                                className="chat-delete-btn"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (window.confirm('정말 이 채팅방을 삭제하시겠습니까? 모든 메시지가 삭제됩니다.')) {
+                                        onDeleteChat(chat.id);
+                                    }
+                                }}
+                                style={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    right: 5,
+                                    transform: 'translateY(-50%)',
+                                    background: 'none',
+                                    border: 'none',
+                                    color: '#dc3545',
+                                    cursor: 'pointer',
+                                    fontSize: '16px',
+                                    padding: '5px',
+                                    zIndex: 10,
+                                }}
+                            >
+                                <span className="bi bi-trash"></span>
+                            </button>
                         )}
                     </div>
                 ))}

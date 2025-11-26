@@ -537,3 +537,66 @@ export const checkChatRoomAccess = async (chatRoomId) => {
     };
   }
 };
+
+export const deleteChatRoom = async (chatRoomId) => {
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError) throw authError;
+
+    if (!user) {
+      return {
+        res_code: 401,
+        res_msg: 'Authentication required'
+      };
+    }
+
+    // Check if user has access to this chat room
+    const { data: chatRoom, error: chatRoomError } = await supabase
+      .from('chat_rooms')
+      .select('buyer_id, seller_id')
+      .eq('id', chatRoomId)
+      .single();
+
+    if (chatRoomError) {
+      return {
+        res_code: 404,
+        res_msg: 'Chat room not found'
+      };
+    }
+
+    // Only allow deletion if user is part of the chat
+    if (chatRoom.buyer_id !== user.id && chatRoom.seller_id !== user.id) {
+      return {
+        res_code: 403,
+        res_msg: 'You can only delete your own chat rooms'
+      };
+    }
+
+    // Delete all messages in the chat room first
+    const { error: messagesError } = await supabase
+      .from('messages')
+      .delete()
+      .eq('chat_room_id', chatRoomId);
+
+    if (messagesError) throw messagesError;
+
+    // Delete the chat room
+    const { error: deleteError } = await supabase
+      .from('chat_rooms')
+      .delete()
+      .eq('id', chatRoomId);
+
+    if (deleteError) throw deleteError;
+
+    return {
+      res_code: 200,
+      res_msg: 'Chat room deleted successfully'
+    };
+  } catch (error) {
+    return {
+      res_code: 400,
+      res_msg: error.message,
+      error: error
+    };
+  }
+};
