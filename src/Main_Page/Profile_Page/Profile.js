@@ -99,7 +99,7 @@ function Profile() {
                 <div className="col-md-6 userInfoCtn">
                     <div className="username">{user.display_name || 'User'}</div>
                     <div className="school">{user.school_verified ? 'SUNY Korea (Verified)' : 'SUNY Korea'}</div>
-                    <Link to='../../review'>
+                    <Link to={`../../review/${user.id}`}>
                         <div className="reputation">Current Reputation: {user.trust_score || 0}/5.0 ({user.total_reviews || 0} reviews)</div> 
                     </Link>
                 </div>

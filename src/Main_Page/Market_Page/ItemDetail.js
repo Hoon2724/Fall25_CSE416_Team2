@@ -848,7 +848,6 @@ function ItemDetail() {
               </>
             )}
             <p>
-              <Link to={`/review/${item.seller_id || item.seller?.id}`}>
                 <b>Seller:</b>{" "}
               {item.seller_display_name ||
                 item.seller?.display_name ||
@@ -865,7 +864,6 @@ function ItemDetail() {
                     0
                   }/5.0)`
                 : null}
-              </Link>
             </p>
             <p className="itemTags"><b>Tags:</b> {item.tags?.join(", ") || "N/A"}</p>
             <div className="interact-container row">
