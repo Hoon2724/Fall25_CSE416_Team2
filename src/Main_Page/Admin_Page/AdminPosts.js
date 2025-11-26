@@ -60,7 +60,7 @@ function AdminPosts() {
         <div className="adminReturnBtn">
           <Link to='../admin'>
           <span className="bi bi-arrow-left"></span>
-          <div className="returnDesc">Return</div>
+          <span className="returnDesc">Return</span>
           </Link>
         </div>
         <div className="adminPostsTitle">Configure Community Posts</div>

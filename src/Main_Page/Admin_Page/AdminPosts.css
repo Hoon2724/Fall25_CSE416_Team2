@@ -2,6 +2,11 @@
   padding: 10px;
 }
 
+.returnDesc {
+  margin-left: 10px;
+  font-weight: bold;
+}
+
 .adminPostsTitle {
   font-size: 36px;
   font-weight: bold;
