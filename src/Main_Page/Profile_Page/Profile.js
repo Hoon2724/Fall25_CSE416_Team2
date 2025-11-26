@@ -99,9 +99,7 @@ function Profile() {
                 <div className="col-md-6 userInfoCtn">
                     <div className="username">{user.display_name || 'User'}</div>
                     <div className="school">{user.school_verified ? 'SUNY Korea (Verified)' : 'SUNY Korea'}</div>
-                    <Link to={`../../review/${user.id}`}>
-                        <div className="reputation">Current Reputation: {user.trust_score || 0}/5.0 ({user.total_reviews || 0} reviews)</div> 
-                    </Link>
+                    <div className="reputation">Current Reputation: {user.trust_score || 0}/5.0 ({user.total_reviews || 0} reviews)</div> 
                 </div>
                 <div className="col-md-3 editBtnCtn">
                     <Link to='../profileEdit'>
@@ -138,9 +136,10 @@ function Profile() {
                         <div className="option myPosts">My Community Posts</div>
                     </Link>
                 </li>
-                <li className="optionItemList">
-                    <div className="option">My Reviews</div>
-                    <UserReviews userId={user.id} />
+                <li className="optionItem">
+                    <Link to={`../review/${user.id}`}>
+                        <div className="option">My Reviews</div>
+                    </Link>
                 </li>
             </ul>
         </div>
