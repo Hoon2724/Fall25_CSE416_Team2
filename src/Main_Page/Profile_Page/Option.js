@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import './Option.css';
 import { getCurrentUser, getUserPosts, getUserItems, getUserWishlists, getUserViewHistory } from '../../lib/api';
+import StatusBadge from '../../components/StatusBadge';
+
+import './Option.css';
 
 function Option(props) {
     const location = useLocation();
@@ -124,6 +126,7 @@ function Option(props) {
                     <div className="opInfo">
                         <h3 className="opName">{item.title || item.name}</h3>
                         <p className="opPrice">{item.price ? `${item.price.toLocaleString()} won` : 'Price not set'}</p>
+                        <StatusBadge status={item.status} />
                     </div>
                 </div>
             ))}

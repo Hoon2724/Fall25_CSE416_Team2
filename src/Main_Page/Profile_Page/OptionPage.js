@@ -3,6 +3,7 @@ import Navbar from '../Navbar.js'
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getCurrentUser, getUserPosts, getUserWishlists, removeFromWishlist } from '../../lib/api';
+import StatusBadge from '../../components/StatusBadge.js';
 
 function OptionPage() {
   const location = useLocation();
@@ -124,6 +125,7 @@ function OptionPage() {
                               <div className="opInfo_sep">
                                   <h3 className="opName_sep">{item.title || item.name}</h3>
                                   <p className="opPrice_sep">{item.price ? `${item.price.toLocaleString()} won` : 'Price not set'}</p>
+                                  <StatusBadge status={item.status} />
                               </div>
                           </div>
                         );
