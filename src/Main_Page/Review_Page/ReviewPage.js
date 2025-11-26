@@ -43,7 +43,7 @@ function ReviewPage() {
             <span className="returnDesc">Return</span>
           </Link>
         </div>
-        <div className="reviewPageTitle">Reviews of {reviewee?.display_name || 'User'}</div>
+        <div className="reviewPageTitle">Your Reviews</div>
 
         {loading ? (
           <div>Loading...</div>
