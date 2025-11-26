@@ -46,16 +46,21 @@
         padding: 0.5rem;
     }
     .navCommunity {
-        font-size: 18px;
+        font-size: 15px;
         font-weight: bold;
     }
     .navChats {
-        font-size: 18px;
+        font-size: 15px;
         font-weight: bold;
     }
+    .navHelp {
+        font-size: 15px;
+        font-weight: bold;
+    }
+  
 
     .bi {
-        font-size: 22px;
+        font-size: 18px;
     }
     .bi-person {
         font-size: 25px;
@@ -83,6 +88,11 @@
         font-weight: bold;
     }
     .navChats {
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .navHelp {
         font-size: 18px;
         font-weight: bold;
     }

@@ -29,6 +29,7 @@ import Profile from './Main_Page/Profile_Page/Profile.js';
 import ProfileEdit from './Main_Page/Profile_Page/ProfileEdit.js';
 import OptionPage from './Main_Page/Profile_Page/OptionPage.js';
 import ReviewPage from './Main_Page/Review_Page/ReviewPage.js'
+import Help from './Main_Page/Help.js';
 
 // Admin Pages
 import Admin from './Main_Page/Admin_Page/Admin.js';
@@ -72,6 +73,7 @@ function App() {
         <Route path='/profile' element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path='/profileEdit' element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
         <Route path='/option/:mode' element={<ProtectedRoute><OptionPage /></ProtectedRoute>} />
+        <Route path='/help' element={<ProtectedRoute><Help /></ProtectedRoute>} />
 
         {/* -------- Admin Pages -------- */}
         <Route path='/admin' element={<ProtectedRoute><Admin /></ProtectedRoute>} />

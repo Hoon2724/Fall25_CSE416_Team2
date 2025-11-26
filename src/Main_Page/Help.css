@@ -1,0 +1,20 @@
+.markdownCtn {
+  width: "100%";
+  display: "flex";
+  justify-content: "center";
+}
+
+.markdownText {
+  max-width: "768px";
+  width: "100%";
+  margin: 10px;
+}
+
+h1 {
+  font-weight: bold;
+  text-align: center;
+}
+
+p {
+  margin-bottom: 5px;
+}

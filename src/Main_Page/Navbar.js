@@ -257,6 +257,9 @@ function Navbar() {
                     <li className="nav-item navChats">
                         <Link className='nav-link' to='/chat'>Chat</Link>
                     </li>
+                    <li className="nav-item navHelp">
+                        <Link className='nav-link' to='/help'>Help</Link>
+                    </li>
                 </ul>
                 <ul className="navbar-nav ms-auto iconCtn">
                     {
