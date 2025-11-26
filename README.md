@@ -43,9 +43,9 @@ fall25-cse-416-team2-git-main-g-newbies-projects.vercel.app
 
 There are no specific instruction regarding the setup for this application. You just need to access the link that is attached above to access our application. After accessing, make sure to sign up first to register your user data to our database.
 
-To access the admin account use the following Google account:
-Email: cse416ad@gmail.com
-Password: admin1234!
+To access the admin account use the following Google account:  
+Email: cse416ad@gmail.com  
+Password: admin1234!  
 
 ## Project Schedule
 
