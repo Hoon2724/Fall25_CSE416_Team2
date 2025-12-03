@@ -46,6 +46,8 @@ There are no specific instruction regarding the setup for this application. You 
 To access the admin account use the following Google account:  
 Email: cse416ad@gmail.com  
 Password: admin1234!  
+  
+Contact to Jaeheon Park(jaeheon.park@stonybrook.edu) if there are any problems in accessing the application with the admin account.
 
 ## Project Schedule
 
@@ -73,4 +75,7 @@ Password: admin1234!
    - *Note: Deploy to Vercel + Supabase, conduct beta testing.*
 
 ## Bug Tracking
-As mentioned in the Communication section, we are currently using the Google Spreadsheet to list the problems with our application. As of current status, we are recommending everyone to use this Spreadsheet to report bugs.
+As mentioned in the Communication section, we are currently using the Google Spreadsheet to list the problems with our application.  
+  
+Users can send feedbacks regarding their experience in CAMAR through posting comment in the community post that is dedicated in gathering feedback.  
+If the user wants to submit the feedback anonymously, they can use the contact button on the post to send feedbacks to the admin privately.
